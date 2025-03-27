@@ -11,9 +11,7 @@
     "postinstall": "flowbite-react patch"
   },
   "dependencies": {
-    "@tailwindcss/vite": "^4.0.17",
     "axios": "^1.8.4",
-    "flowbite": "^3.1.2",
     "flowbite-react": "^0.11.5",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
@@ -28,9 +26,10 @@
     "eslint": "^9.21.0",
     "eslint-plugin-react-hooks": "^5.1.0",
     "eslint-plugin-react-refresh": "^0.4.19",
+    "flowbite": "^3.1.2",
     "globals": "^15.15.0",
     "postcss": "^8.5.3",
-    "tailwindcss": "^4.0.17",
+    "tailwindcss": "^3.4.17",
     "vite": "^6.2.0"
   }
 }
