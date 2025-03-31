@@ -6,6 +6,7 @@ import Displaypost from './components/DisplayPosts/DisplayPosts'
 import Footer from './components/Footer'
 import About from './pages/About'
 
+
 export default function App() {
   return (
     <div>
@@ -15,6 +16,7 @@ export default function App() {
           <Route path='/addpost' element={<Addpost />} />
           <Route path='/displaypost' element={<Displaypost />} />
           <Route path = '/about' element={<About />} />
+          
 
         </Routes>
         <Footer /> 
