@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import {
   updateStart,
@@ -18,10 +18,12 @@ export default function Profile() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  if (!currentUser) {
-    navigate('/signin');
-    return null; // Prevent rendering if no user
-  }
+  // Redirect to /signin if no user is logged in
+  useEffect(() => {
+    if (!currentUser) {
+      navigate('/signin');
+    }
+  }, [currentUser, navigate]);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.id]: e.target.value.trim() });
@@ -78,6 +80,10 @@ export default function Profile() {
       console.error('Signout error:', err);
     }
   };
+
+  if (!currentUser) {
+    return null; // Prevent rendering if no user
+  }
 
   return (
     <div className="p-10 flex justify-center items-center min-h-screen bg-gray-100">

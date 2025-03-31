@@ -8,11 +8,13 @@ import Signin from './pages/Signin';
 import Signup from './pages/Signup';
 import Profile from './pages/Profile';
 import OAuthCallback from './components/OAuthCallback';
-
+import Header from './components/Header';
 export default function App() {
   return (
     <div>
+      <Header />
       <React.Fragment>
+      
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/addpost" element={<Addpost />} />
@@ -25,6 +27,7 @@ export default function App() {
         </Routes>
         <Footer />
       </React.Fragment>
+
     </div>
   );
 }
