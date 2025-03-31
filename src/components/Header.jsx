@@ -47,8 +47,8 @@ import {
             <Link to="/" className="text-white hover:text-gray-300">
               Home
             </Link>
-            <Link to="/about" className="text-white hover:text-gray-300">
-              About
+            <Link to="/displaypost" className="text-white hover:text-gray-300">
+            Blogs
             </Link>
             <Link to="/features" className="text-white hover:text-gray-300">
               Features
@@ -99,8 +99,8 @@ import {
             <Link to="/" className="block py-2 px-4 text-white hover:bg-gray-700">
               Home
             </Link>
-            <Link to="/about" className="block py-2 px-4 text-white hover:bg-gray-700">
-              About
+            <Link to="/displaypost" className="block py-2 px-4 text-white hover:bg-gray-700">
+              Blogs
             </Link>
             <Link to="/features" className="block py-2 px-4 text-white hover:bg-gray-700">
               Features
