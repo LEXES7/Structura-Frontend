@@ -23,6 +23,7 @@ export default function App() {
           <Route path="/signup" element={<Signup />} />
           <Route path="/dashboard" element={<Profile />} />
           <Route path="/oauth-callback" element={<OAuthCallback />} />
+          <Route path="/home" element={<Home />} />
           <Route path="*" element={<div>Page Not Found</div>} />
         </Routes>
         <Footer />

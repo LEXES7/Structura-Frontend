@@ -40,7 +40,7 @@ import {
     return (
       <Navbar className="bg-black shadow-lg">
         <div className="container mx-auto flex items-center justify-between">
-          <Link to="/" className="text-white text-2xl font-bold">
+          <Link to="/home" className="text-white text-2xl font-bold">
             Structura
           </Link>
           <div className="hidden lg:flex gap-6">
