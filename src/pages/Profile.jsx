@@ -18,7 +18,7 @@ export default function Profile() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  // Redirect to /signin if no user is logged in
+  // Redirecting to /signin if no user logged in
   useEffect(() => {
     if (!currentUser) {
       navigate('/signin');
@@ -82,7 +82,7 @@ export default function Profile() {
   };
 
   if (!currentUser) {
-    return null; // Prevent rendering if no user
+    return null; 
   }
 
   return (
