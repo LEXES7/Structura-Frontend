@@ -9,6 +9,9 @@ import Signup from './pages/Signup';
 import Profile from './pages/Profile';
 import OAuthCallback from './components/OAuthCallback';
 import Header from './components/Header';
+import HomeDemo from './components/Home/Homedemo'
+
+
 export default function App() {
   return (
     <div>
@@ -24,6 +27,7 @@ export default function App() {
           <Route path="/dashboard" element={<Profile />} />
           <Route path="/oauth-callback" element={<OAuthCallback />} />
           <Route path="/home" element={<Home />} />
+          <Route path="/homedemo" element={<HomeDemo />} />
           <Route path="*" element={<div>Page Not Found</div>} />
         </Routes>
         <Footer />
