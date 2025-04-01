@@ -23,7 +23,8 @@ export default function Signup() {
     try {
       dispatch(signInStart());
 
-      const signupRes = await fetch('http://localhost:8080/api/auth/signup', {
+      // Signup request using proxied URL
+      const signupRes = await fetch('/api/auth/signup', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -33,18 +34,20 @@ export default function Signup() {
       const signupData = await signupRes.json();
 
       if (signupData.success === false) {
+        console.error('Signup Failed:', signupData.message);
         return dispatch(signInFailure(signupData.message));
       }
 
       if (signupRes.ok) {
         try {
-          const loginRes = await fetch('http://localhost:8080/api/auth/signin', {
+          // Auto-login request using proxied URL
+          const loginRes = await fetch('/api/auth/signin', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
             },
             body: JSON.stringify({
-              email: formData.email, 
+              email: formData.email,
               password: formData.password,
             }),
           });
@@ -52,11 +55,12 @@ export default function Signup() {
 
           if (loginData.success === false) {
             console.warn('Auto-login failed:', loginData.message);
-            navigate('/signin'); 
+            navigate('/signin');
             return;
           }
 
           if (loginRes.ok) {
+            console.log('Login Success:', loginData);
             dispatch(signInSuccess({ ...loginData, token: loginData.token }));
             if (loginData.isAdmin) {
               navigate('/admin');
@@ -66,11 +70,12 @@ export default function Signup() {
           }
         } catch (loginError) {
           console.warn('Auto-login error:', loginError.message);
-          navigate('/signin'); 
+          navigate('/signin');
           return;
         }
       }
     } catch (error) {
+      console.error('Signup Error:', error.message);
       dispatch(signInFailure(error.message));
     }
   };

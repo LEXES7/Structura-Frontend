@@ -85,6 +85,14 @@ export default function Profile() {
     navigate('/addpost');
   };
 
+  const handleAddevent= () => {
+    navigate('/av');
+  };
+
+  const handledisevent= () => {
+    navigate('/displayevent');
+  };
+
   if (!currentUser) {
     return null;
   }
@@ -140,6 +148,14 @@ export default function Profile() {
           {error && <Alert color="failure" className="mt-5">{error}</Alert>}
           <Button onClick={handleAddPost} gradientDuoTone="cyanToBlue" className="mt-6 w-full">
             Add New Post
+          </Button>
+
+          <Button onClick={handleAddevent} gradientDuoTone="cyanToBlue" className="mt-6 w-full">
+            Add New ev
+          </Button>
+
+          <Button onClick={handledisevent} gradientDuoTone="cyanToBlue" className="mt-6 w-full">
+            Add New ev
           </Button>
         </Card>
 
