@@ -2,8 +2,9 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Button, Label, TextInput, Textarea } from 'flowbite-react';
 import { useSelector } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
 
-export default function DisplayPosts({ isDashboard = false }) { // Matches your casing
+export default function DisplayPosts({ isDashboard = false }) {
     const [posts, setPosts] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -15,8 +16,9 @@ export default function DisplayPosts({ isDashboard = false }) { // Matches your 
         postImg: '',
     });
     const [newImage, setNewImage] = useState(null);
-    const { currentUser } = useSelector(state => state.user);
+    const { currentUser } = useSelector((state) => state.user);
     const token = currentUser?.token;
+    const navigate = useNavigate();
 
     useEffect(() => {
         const fetchPosts = async () => {
@@ -103,6 +105,10 @@ export default function DisplayPosts({ isDashboard = false }) { // Matches your 
         }
     };
 
+    const handleAddPost = () => {
+        navigate('/addpost'); // Navigate to the Addpost form
+    };
+
     if (loading) {
         return <div className="flex justify-center items-center h-screen">Loading...</div>;
     }
@@ -113,9 +119,16 @@ export default function DisplayPosts({ isDashboard = false }) { // Matches your 
 
     return (
         <div className="container mx-auto px-4 py-8">
-            <h1 className="text-3xl font-bold mb-6 text-center text-gray-800">
-                {isDashboard ? 'Your Posts' : 'All Posts'}
-            </h1>
+            <div className="flex justify-between items-center mb-6">
+                <h1 className="text-3xl font-bold text-gray-800">
+                    {isDashboard ? 'Your Posts' : 'All Posts'}
+                </h1>
+                {isDashboard && (
+                    <Button color="blue" onClick={handleAddPost}>
+                        Add Post
+                    </Button>
+                )}
+            </div>
 
             {isDashboard && editingPostId && (
                 <div className="mb-8 p-4 bg-gray-100 rounded-lg shadow-md">
@@ -178,7 +191,8 @@ export default function DisplayPosts({ isDashboard = false }) { // Matches your 
                 </div>
             )}
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+            {/* Scrollable Posts Container */}
+            <div className="h-[500px] overflow-y-auto grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
                 {posts.map((post) => (
                     <div key={post.id} className="bg-white rounded-lg shadow-md p-4">
                         {post.postImg && post.postImg !== 'default.png' ? (
