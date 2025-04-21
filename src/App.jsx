@@ -11,6 +11,7 @@ import Dashboard from './pages/Dashboard';
 import OAuthCallback from './components/OAuthCallback';
 import Header from './components/Header';
 import PrivateRoute from './components/PrivateRoute'; // Updated PrivateRoute
+import PostPage from './pages/PostPage';
 
 export default function App() {
   return (
@@ -31,6 +32,7 @@ export default function App() {
           <Route path="/oauth-callback" element={<OAuthCallback />} />
           <Route path="/home" element={<Home />} />
           <Route path="*" element={<div>Page Not Found</div>} />
+          <Route path="/post/:postId" element={<PostPage />} />
         </Routes>
         <Footer />
       </React.Fragment>

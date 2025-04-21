@@ -109,6 +109,10 @@ export default function DisplayPosts({ isDashboard = false }) {
         navigate('/addpost'); // Navigate to the Addpost form
     };
 
+    const handlePostClick = (postId) => {
+        navigate(`/post/${postId}`); // Navigate to the PostPage
+    };
+
     if (loading) {
         return <div className="flex justify-center items-center h-screen">Loading...</div>;
     }
@@ -194,7 +198,11 @@ export default function DisplayPosts({ isDashboard = false }) {
             {/* Scrollable Posts Container */}
             <div className="h-[500px] overflow-y-auto grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
                 {posts.map((post) => (
-                    <div key={post.id} className="bg-white rounded-lg shadow-md p-4">
+                    <div
+                        key={post.id}
+                        className="bg-white rounded-lg shadow-md p-4 cursor-pointer"
+                        onClick={() => handlePostClick(post.id)} // Navigate on click
+                    >
                         {post.postImg && post.postImg !== 'default.png' ? (
                             <img
                                 className="w-full h-48 object-cover mb-4"
@@ -212,8 +220,8 @@ export default function DisplayPosts({ isDashboard = false }) {
                         <p className="text-gray-700 text-base line-clamp-2 mb-4">{post.postDescription || 'No description'}</p>
                         {isDashboard && (
                             <div className="flex space-x-2">
-                                <Button color="blue" size="sm" onClick={() => handleEditClick(post)}>Edit</Button>
-                                <Button color="red" size="sm" onClick={() => handleDelete(post.id)}>Delete</Button>
+                                <Button color="blue" size="sm" onClick={(e) => { e.stopPropagation(); handleEditClick(post); }}>Edit</Button>
+                                <Button color="red" size="sm" onClick={(e) => { e.stopPropagation(); handleDelete(post.id); }}>Delete</Button>
                             </div>
                         )}
                     </div>
