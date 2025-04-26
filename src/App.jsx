@@ -31,6 +31,7 @@ import OAuthCallback from './components/OAuthCallback';
 import Header from './components/Header';
 import PrivateRoute from './components/PrivateRoute'; // Updated PrivateRoute
 import PostPage from './pages/PostPage';
+import AboutUs from './pages/About';
 
 export default function App() {
   return (
@@ -43,6 +44,7 @@ export default function App() {
           <Route path="/course" element={<Course />} />
           <Route path="/displaypost" element={<Displaypost />} />
           <Route path="/features" element={<FeaturesPage />} />
+          <Route path="/about" element={<AboutUs />} />
 
 
 
