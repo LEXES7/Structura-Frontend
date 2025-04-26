@@ -4,6 +4,7 @@ import Home from './components/Home/Home';
 import Addpost from './components/AddPost/Addpost';
 import Learn from './components/Learn/Learn';
 import Displaypost from './components/DisplayPosts/DisplayPosts';
+import FeaturesPage from './pages/FeaturesPage';
 
 
 
@@ -41,6 +42,7 @@ export default function App() {
           <Route path="/addpost" element={<Addpost />} />
           <Route path="/course" element={<Course />} />
           <Route path="/displaypost" element={<Displaypost />} />
+          <Route path="/features" element={<FeaturesPage />} />
 
 
 

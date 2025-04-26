@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { Badge } from 'flowbite-react';
 import homeImage from '../../assets/home.jpg';
 import featureImage from '../../assets/img.jpg';
-// Placeholder images for features (to be replaced by you)
+
 import feature1Image from '../../assets/sketch.jpg';
 import feature2Image from '../../assets/house1.jpg';
 import feature3Image from '../../assets/sketch3.jpg';
@@ -11,7 +11,7 @@ import feature4Image from '../../assets/AI.jpg';
 import feature5Image from '../../assets/sketch1.jpg';
 import feature6Image from '../../assets/house2.jpg';
 
-// Features data for Home Inventory Management System
+
 const features = [
   {
       title: 'Architecture Tutorials',
