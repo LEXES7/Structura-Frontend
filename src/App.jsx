@@ -2,7 +2,25 @@ import React from 'react';
 import { Route, Routes } from 'react-router';
 import Home from './components/Home/Home';
 import Addpost from './components/AddPost/Addpost';
+import Learn from './components/Learn/Learn';
 import Displaypost from './components/DisplayPosts/DisplayPosts';
+
+
+
+
+
+
+
+
+
+
+
+
+import Addlearn from './components/AddLearn/Addlearn';
+import AddCourse from './components/AddCourse/AddCourse';
+import Course from './components/Course/Course';
+import Displaylearn from './components/DisplayLearns/DisplayLearns';
+import DisplayCourse from './components/DisplayCourses/DisplayCourses';
 import Footer from './components/Footer';
 import Signin from './pages/Signin';
 import Signup from './pages/Signup';
@@ -21,7 +39,30 @@ export default function App() {
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/addpost" element={<Addpost />} />
+          <Route path="/course" element={<Course />} />
           <Route path="/displaypost" element={<Displaypost />} />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+          <Route path="/displaylearn" element={<Displaylearn />} />
+          <Route path="/displaycourse" element={<DisplayCourse />} />
+          <Route path="/addlearn" element={<Addlearn />} />
+          <Route path="/addcourse" element={<AddCourse />} />
+          <Route path="/learn" element={<Learn />} />
           <Route path="/signin" element={<Signin />} />
           <Route path="/signup" element={<Signup />} />
           <Route path="/profile" element={<Profile />} />
