@@ -2,6 +2,10 @@ import React, { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import UnifiedSidebar from '../components/DashSidebar';
 import DisplayPosts from '../components/DisplayPosts/DisplayPosts';
+
+
+
+
 import Profile from './Profile';
 
 export default function Dashboard() {
@@ -28,12 +32,14 @@ export default function Dashboard() {
       <div className="flex-1 p-4">
         {/* Render content based on the tab */}
         {tab === 'displaypost' && <DisplayPosts isDashboard={true} />}
+       
         {tab === 'profile' && <Profile />}
-        {tab !== 'displaypost' && tab !== 'profile' && (
+        {tab !== 'displaypost'   && tab !== 'profile' && (
           <div className="text-center text-gray-500">
             <p>Invalid tab selected. Please choose a valid option from the sidebar.</p>
           </div>
         )}
+        
       </div>
     </div>
   );
