@@ -2,7 +2,7 @@ import React from 'react';
 import { Route, Routes } from 'react-router-dom';
 import { Provider } from 'react-redux';
 import { PersistGate } from 'redux-persist/integration/react';
-import { store, persistor } from './redux/store'; // Adjust path
+import { store, persistor } from './redux/store'; 
 import Home from './components/Home/Home';
 import Addpost from './components/AddPost/Addpost';
 import Displaypost from './components/DisplayPosts/DisplayPosts';
@@ -19,7 +19,7 @@ import HomeDemo from './components/Home/Homedemo';
 
 
 import AddEventForm from './components/Addevents/AddEventForm';
-import DisplayEvent from './components/DisplayEvents/EventCalendar' // Correct import
+import DisplayEvent from './components/DisplayEvents/EventCalendar' 
 
 export default function App() {
   return (
