@@ -34,6 +34,16 @@ export default function Dashboard() {
         {tab === 'displaypost' && <DisplayPosts isDashboard={true} />}
        
         {tab === 'profile' && <Profile />}
+
+
+
+
+
+
+
+
+
+        
         {tab !== 'displaypost'   && tab !== 'profile' && (
           <div className="text-center text-gray-500">
             <p>Invalid tab selected. Please choose a valid option from the sidebar.</p>

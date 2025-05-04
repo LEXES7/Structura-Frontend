@@ -33,6 +33,13 @@ import PrivateRoute from './components/PrivateRoute'; // Updated PrivateRoute
 import PostPage from './pages/PostPage';
 import AboutUs from './pages/About';
 
+
+
+
+
+
+
+
 export default function App() {
   return (
     <div>
@@ -78,6 +85,9 @@ export default function App() {
           <Route path="/home" element={<Home />} />
           <Route path="*" element={<div>Page Not Found</div>} />
           <Route path="/post/:postId" element={<PostPage />} />
+
+
+          
         </Routes>
         <Footer />
       </React.Fragment>
