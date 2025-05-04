@@ -50,6 +50,13 @@ import {
             <Link to="/displaypost" className="text-white hover:text-gray-300">
             Blogs
             </Link>
+            <Link to="/learn" className="text-white hover:text-gray-300">
+            Courses
+            </Link>
+            <Link to="/about" className="text-white hover:text-gray-300">
+            About
+            </Link>
+            
             <Link to="/features" className="text-white hover:text-gray-300">
               Features
             </Link>
@@ -102,9 +109,20 @@ import {
             <Link to="/displaypost" className="block py-2 px-4 text-white hover:bg-gray-700">
               Blogs
             </Link>
+            
             <Link to="/features" className="block py-2 px-4 text-white hover:bg-gray-700">
               Features
             </Link>
+
+
+            <Link to="/learn" className="block py-2 px-4 text-white hover:bg-gray-700">
+              Learn
+            </Link>
+            <Link to="/about" className="block py-2 px-4 text-white hover:bg-gray-700">
+              About
+            </Link>
+            
+            
           </NavbarCollapse>
         </div>
       </Navbar>
