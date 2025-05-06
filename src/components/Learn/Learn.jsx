@@ -48,60 +48,10 @@ export default function Learn() {
 
     return (
         <div className="flex min-h-screen bg-gray-100">
-            {/* Sidebar */}
-            <div className="w-64 bg-gray-900 text-white flex flex-col fixed h-full">
-                <div className="p-4 text-2xl font-bold border-b border-gray-700">
-                    Dashboard
-                </div>
-                <nav className="flex-1 p-4">
-                    <ul className="space-y-4">
-                        <li>
-                            <Link
-                                to="/displaylearn"
-                                className={`block p-2 rounded hover:bg-blue-700 ${
-                                    isDashboard ? 'bg-blue-800' : ''
-                                }`}
-                            >
-                                My Learning
-                            </Link>
-                        </li>
-                       
-                       
-                        <li>
-                            <Link
-                                to="/displaycourse"
-                                className={`block p-2 rounded hover:bg-blue-700 ${
-                                    isDashboard ? 'bg-blue-800' : ''
-                                }`}
-                            >
-                                My Courses
-                            </Link>
-                        </li>
-                        
-                        <li>
-                            <Link
-                                to="/learn"
-                                className={`block p-2 rounded hover:bg-blue-700 ${
-                                    !isDashboard ? 'bg-blue-800' : ''
-                                }`}
-                            >
-                                Explore Learnings
-                            </Link>
-                        </li>
-                    </ul>
-                </nav>
-                <div className="p-4 border-t border-gray-700">
-                    <button
-                        className="w-full p-2 bg-red-600 rounded hover:bg-red-700"
-                        onClick={handleSignOut}
-                    >
-                        Sign Out
-                    </button>
-                </div>
-            </div>
+            
 
             {/* Main Content */}
-            <div className="flex-1 ml-64 p-6">
+            <div className="flex-1 p-6">
                 {error && (
                     <div className="mb-4 p-4 bg-red-100 text-red-700 rounded-lg">
                         {error}

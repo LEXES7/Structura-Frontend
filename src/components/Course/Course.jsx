@@ -71,53 +71,6 @@ export default function Course() {
 
     return (
         <div className="flex min-h-screen bg-gray-100">
-            {/* Sidebar */}
-            <div className="w-64 bg-gray-900 text-white flex flex-col fixed h-full">
-                <div className="p-4 text-2xl font-bold border-b border-gray-700">
-                    Dashboard
-                </div>
-                <nav className="flex-1 p-4">
-                    <ul className="space-y-4">
-                        <li>
-                            <Link
-                                to="/displaycourse"
-                                className={`block p-2 rounded hover:bg-blue-700 ${
-                                    isDashboard ? 'bg-blue-800' : ''
-                                }`}
-                            >
-                                My Courses
-                            </Link>
-                        </li>
-                        <li>
-                            <Link
-                                to="/addcourse"
-                                className="block p-2 rounded hover:bg-blue-700"
-                            >
-                                Add Course
-                            </Link>
-                        </li>
-                        <li>
-                            <Link
-                                to="/course"
-                                className={`block p-2 rounded hover:bg-blue-700 ${
-                                    !isDashboard ? 'bg-blue-800' : ''
-                                }`}
-                            >
-                                Explore Courses
-                            </Link>
-                        </li>
-                    </ul>
-                </nav>
-                <div className="p-4 border-t border-gray-700">
-                    <button
-                        className="w-full p-2 bg-red-600 rounded hover:bg-red-700"
-                        onClick={handleSignOut}
-                    >
-                        Sign Out
-                    </button>
-                </div>
-            </div>
-
             {/* Main Content */}
             <div className="flex-1 ml-64 p-6">
                 {error && (
