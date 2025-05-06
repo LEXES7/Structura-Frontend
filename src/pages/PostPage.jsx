@@ -6,7 +6,6 @@ import { Button, Textarea, Badge } from 'flowbite-react';
 import { HiCalendar } from 'react-icons/hi';
 import postLogo from '../assets/postlogo.png';
 
-
 const formatDate = (dateString) => {
     if (!dateString) return 'Date unavailable';
     try {
@@ -33,6 +32,22 @@ export default function PostPage() {
     const [error, setError] = useState(null);
     const { currentUser } = useSelector((state) => state.user);
     const navigate = useNavigate();
+    const BASE_URL = 'http://localhost:8080';
+
+    const getImageUrl = (imgPath) => {
+        console.log("Processing image path:", imgPath);
+        if (!imgPath || imgPath === 'default.png') {
+            console.log("Using default image");
+            return postLogo;
+        }
+        if (imgPath.startsWith('http')) {
+            console.log("Using full URL:", imgPath);
+            return imgPath;
+        }
+        const url = `${BASE_URL}${imgPath}`;
+        console.log("Constructed image URL:", url);
+        return url;
+    };
 
     useEffect(() => {
         if (!currentUser) {
@@ -42,23 +57,27 @@ export default function PostPage() {
 
         const fetchPostAndComments = async () => {
             try {
-                const postResponse = await axios.get(`/api/posts/${postId}`, {
+                console.log(`Fetching post from ${BASE_URL}/api/posts/${postId} with token: ${currentUser.token ? 'present' : 'absent'}`);
+                const postResponse = await axios.get(`${BASE_URL}/api/posts/${postId}`, {
                     headers: {
                         Authorization: `Bearer ${currentUser.token}`,
                     },
                 });
+                console.log("Post fetched:", postResponse.data);
                 setPost(postResponse.data);
 
-                const commentsResponse = await axios.get(`/api/comments/post/${postId}`, {
+                console.log(`Fetching comments from ${BASE_URL}/api/comments/post/${postId}`);
+                const commentsResponse = await axios.get(`${BASE_URL}/api/comments/post/${postId}`, {
                     headers: {
                         Authorization: `Bearer ${currentUser.token}`,
                     },
                 });
+                console.log("Comments fetched:", commentsResponse.data);
                 setComments(commentsResponse.data);
                 setLoading(false);
             } catch (err) {
                 console.error('Error fetching data:', err);
-                setError(err.response?.data?.message || 'Failed to load data.');
+                setError(err.response?.data?.message || 'Failed to load data. Please check your connection or login status.');
                 setLoading(false);
             }
         };
@@ -69,13 +88,14 @@ export default function PostPage() {
     const handleCommentSubmit = async (e) => {
         e.preventDefault();
         if (!newComment.trim()) {
-            setError('Comment cannot be empty');
+            setError('Comment content cannot be empty');
             return;
         }
 
         try {
+            console.log(`Posting comment to ${BASE_URL}/api/comments/post/${postId}`);
             const response = await axios.post(
-                `/api/comments/post/${postId}`,
+                `${BASE_URL}/api/comments/post/${postId}`,
                 { content: newComment },
                 {
                     headers: {
@@ -83,23 +103,26 @@ export default function PostPage() {
                     },
                 }
             );
+            console.log("Comment posted:", response.data);
             setComments([...comments, response.data]);
             setNewComment('');
             setError(null);
         } catch (err) {
+            console.error('Error posting comment:', err);
             setError(err.response?.data?.message || 'Failed to post comment.');
         }
     };
 
     const handleEditComment = async (commentId) => {
         if (!editedContent.trim()) {
-            setError('Edited comment cannot be empty');
+            setError('Comment content cannot be empty');
             return;
         }
 
         try {
+            console.log(`Updating comment ${commentId} at ${BASE_URL}/api/comments/${commentId}`);
             const response = await axios.put(
-                `/api/comments/${commentId}`,
+                `${BASE_URL}/api/comments/${commentId}`,
                 { content: editedContent },
                 {
                     headers: {
@@ -107,6 +130,7 @@ export default function PostPage() {
                     },
                 }
             );
+            console.log("Comment updated:", response.data);
             setComments(
                 comments.map((comment) =>
                     comment.id === commentId ? response.data : comment
@@ -116,6 +140,7 @@ export default function PostPage() {
             setEditedContent('');
             setError(null);
         } catch (err) {
+            console.error('Error updating comment:', err);
             setError(err.response?.data?.message || 'Failed to update comment.');
         }
     };
@@ -124,16 +149,51 @@ export default function PostPage() {
         if (!window.confirm('Are you sure you want to delete this comment?')) return;
 
         try {
-            await axios.delete(`/api/comments/${commentId}`, {
+            console.log(`Deleting comment ${commentId} at ${BASE_URL}/api/comments/${commentId}`);
+            await axios.delete(`${BASE_URL}/api/comments/${commentId}`, {
                 headers: {
                     Authorization: `Bearer ${currentUser.token}`,
                 },
             });
+            console.log("Comment deleted:", commentId);
             setComments(comments.filter((comment) => comment.id !== commentId));
             setError(null);
         } catch (err) {
+            console.error('Error deleting comment:', err);
             setError(err.response?.data?.message || 'Failed to delete comment.');
         }
+    };
+
+    const handleRetry = () => {
+        setError(null);
+        setLoading(true);
+        const fetchPostAndComments = async () => {
+            try {
+                console.log(`Retrying fetch post from ${BASE_URL}/api/posts/${postId}`);
+                const postResponse = await axios.get(`${BASE_URL}/api/posts/${postId}`, {
+                    headers: {
+                        Authorization: `Bearer ${currentUser.token}`,
+                    },
+                });
+                console.log("Post fetched on retry:", postResponse.data);
+                setPost(postResponse.data);
+
+                console.log(`Retrying fetch comments from ${BASE_URL}/api/comments/post/${postId}`);
+                const commentsResponse = await axios.get(`${BASE_URL}/api/comments/post/${postId}`, {
+                    headers: {
+                        Authorization: `Bearer ${currentUser.token}`,
+                    },
+                });
+                console.log("Comments fetched on retry:", commentsResponse.data);
+                setComments(commentsResponse.data);
+                setLoading(false);
+            } catch (err) {
+                console.error('Error retrying fetch:', err);
+                setError(err.response?.data?.message || 'Failed to load data. Please check your connection or login status.');
+                setLoading(false);
+            }
+        };
+        fetchPostAndComments();
     };
 
     if (loading) {
@@ -144,10 +204,13 @@ export default function PostPage() {
         );
     }
 
-    if (error && error !== 'Comment cannot be empty' && error !== 'Edited comment cannot be empty') {
+    if (error && error !== 'Comment content cannot be empty') {
         return (
             <div className="container mx-auto px-4 py-8 text-center text-red-400 bg-gray-900">
                 {error === "Post not found" ? "The requested post does not exist." : error}
+                <Button onClick={handleRetry} className="mt-4" gradientDuoTone="purpleToBlue">
+                    Retry
+                </Button>
             </div>
         );
     }
@@ -155,15 +218,17 @@ export default function PostPage() {
     return (
         <div className="bg-gradient-to-b from-gray-900 to-gray-800 text-white min-h-screen py-12">
             <div className="container mx-auto px-4">
-                {/* Post Details */}
                 <div className="bg-gray-800 rounded-xl shadow-lg p-6 mb-8">
                     {post?.postImg && post.postImg !== 'default.png' ? (
                         <div className="relative">
                             <img
                                 className="w-full h-72 object-cover rounded-t-xl"
-                                src={`/api${post.postImg}`}
+                                src={getImageUrl(post.postImg)}
                                 alt={post.postName}
-                                onError={(e) => (e.target.src = postLogo)}
+                                onError={(e) => {
+                                    console.error("Image failed to load:", post.postImg);
+                                    e.target.src = postLogo;
+                                }}
                             />
                             <Badge
                                 color="info"
@@ -203,11 +268,9 @@ export default function PostPage() {
                     </div>
                 </div>
 
-                {/* Comment Section */}
                 <div className="bg-gray-800 rounded-xl shadow-lg p-6">
                     <h2 className="text-3xl font-bold text-white mb-6">Comments</h2>
 
-                    {/* Comment Form */}
                     <div className="mb-8">
                         <Textarea
                             className="w-full p-3 bg-gray-700 text-white border-gray-600 focus:border-blue-500 focus:ring-blue-500 rounded-lg"
@@ -216,7 +279,7 @@ export default function PostPage() {
                             value={newComment}
                             onChange={(e) => setNewComment(e.target.value)}
                         />
-                        {error === 'Comment cannot be empty' && (
+                        {error === 'Comment content cannot be empty' && (
                             <p className="text-red-400 text-sm mt-2">{error}</p>
                         )}
                         <Button
@@ -228,7 +291,6 @@ export default function PostPage() {
                         </Button>
                     </div>
 
-                    {/* Comment List */}
                     {comments.length === 0 ? (
                         <p className="text-gray-400 text-lg">No comments yet. Be the first to comment!</p>
                     ) : (
@@ -277,7 +339,7 @@ export default function PostPage() {
                                                 value={editedContent}
                                                 onChange={(e) => setEditedContent(e.target.value)}
                                             />
-                                            {error === 'Edited comment cannot be empty' && (
+                                            {error === 'Comment content cannot be empty' && (
                                                 <p className="text-red-400 text-sm mt-2">{error}</p>
                                             )}
                                             <div className="flex space-x-3 mt-3">

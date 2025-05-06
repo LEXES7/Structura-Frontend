@@ -4,7 +4,7 @@ import { Button, Label, TextInput, Textarea, Badge } from 'flowbite-react';
 import { useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { HiCalendar } from 'react-icons/hi';
-import postLogo from '../../assets/postlogo.png'; 
+import postLogo from '../../assets/postlogo.png';
 
 const formatDate = (dateString) => {
     if (!dateString) return 'Date unavailable';
@@ -37,19 +37,21 @@ export default function DisplayPosts({ isDashboard = false }) {
     const { currentUser } = useSelector((state) => state.user);
     const token = currentUser?.token;
     const navigate = useNavigate();
+    const BASE_URL = 'http://localhost:8080';
 
     useEffect(() => {
         const fetchPosts = async () => {
             try {
-                const url = isDashboard ? '/api/posts/user' : '/api/posts';
+                const url = isDashboard ? `${BASE_URL}/api/posts/user` : `${BASE_URL}/api/posts`;
                 const config = isDashboard && token ? { headers: { Authorization: `Bearer ${token}` } } : {};
+                console.log(`Fetching posts from ${url} with token: ${token ? 'present' : 'absent'}`);
                 const response = await axios.get(url, config);
                 console.log("Fetched posts:", response.data);
                 setPosts(response.data);
                 setLoading(false);
             } catch (err) {
                 console.error('Error fetching posts:', err);
-                setError('Failed to load posts.');
+                setError(err.response?.data?.message || 'Failed to load posts. Please check your connection or login status.');
                 setLoading(false);
             }
         };
@@ -90,7 +92,7 @@ export default function DisplayPosts({ isDashboard = false }) {
 
         try {
             console.log("Updating post:", editingPostId);
-            const response = await axios.put(`/api/posts/${editingPostId}`, formData, {
+            const response = await axios.put(`${BASE_URL}/api/posts/${editingPostId}`, formData, {
                 headers: {
                     'Content-Type': 'multipart/form-data',
                     Authorization: `Bearer ${token}`,
@@ -99,9 +101,10 @@ export default function DisplayPosts({ isDashboard = false }) {
             console.log("Post updated:", response.data);
             setPosts(posts.map(post => ((post._id || post.id) === editingPostId ? response.data : post)));
             setEditingPostId(null);
+            setNewImage(null);
         } catch (err) {
             console.error('Error updating post:', err);
-            setError('Failed to update post: ' + (err.response?.data?.message || err.message));
+            setError(err.response?.data?.message || 'Failed to update post.');
         }
     };
 
@@ -118,13 +121,13 @@ export default function DisplayPosts({ isDashboard = false }) {
         if (window.confirm('Are you sure you want to delete this post?')) {
             try {
                 console.log("Deleting post:", postId);
-                await axios.delete(`/api/posts/${postId}`, {
+                await axios.delete(`${BASE_URL}/api/posts/${postId}`, {
                     headers: { Authorization: `Bearer ${token}` },
                 });
                 setPosts(posts.filter(post => (post._id !== postId && post.id !== postId)));
             } catch (err) {
                 console.error('Error deleting post:', err);
-                setError('Failed to delete post: ' + (err.response?.data?.message || err.message));
+                setError(err.response?.data?.message || 'Failed to delete post.');
             }
         }
     };
@@ -140,44 +143,26 @@ export default function DisplayPosts({ isDashboard = false }) {
     const handleCategoryFilter = (category) => {
         setSelectedCategory(category);
     };
-    
-    // Updated getImageUrl function to use public endpoint
+
     const getImageUrl = (imgPath) => {
         console.log("Processing image path:", imgPath);
-        
-        if (!imgPath) {
-            console.log("No image path, using default");
+        if (!imgPath || imgPath === 'default.png') {
+            console.log("Using default image");
             return postLogo;
         }
-        
-        if (imgPath === 'default.png') {
-            console.log("Default image, using logo");
-            return postLogo;
-        }
-        
-        // If it's a full URL, use it as is
         if (imgPath.startsWith('http')) {
             console.log("Using full URL:", imgPath);
             return imgPath;
         }
-        
-        // If it starts with /uploads/, extract the filename and use public endpoint
-        if (imgPath.startsWith('/uploads/')) {
-            const filename = imgPath.split('/').pop();
-            const publicUrl = `/api/public/image/${filename}`;
-            console.log("Image path converted to public endpoint:", imgPath, "→", publicUrl);
-            return publicUrl;
-        }
-        
-        // Otherwise use as is
-        console.log("Using path as is:", imgPath);
-        return imgPath;
+        const url = `${BASE_URL}${imgPath}`;
+        console.log("Constructed image URL:", url);
+        return url;
     };
 
     const filteredPosts = selectedCategory === 'All'
         ? posts
         : posts.filter(post => post.postCategory === selectedCategory);
-    
+
     const categories = ['All', ...new Set(posts.map(post => post.postCategory || 'Uncategorized'))];
 
     if (loading) {
@@ -200,7 +185,6 @@ export default function DisplayPosts({ isDashboard = false }) {
     return (
         <div className="bg-gradient-to-b from-gray-900 to-gray-800 text-white min-h-screen py-12">
             <div className="container mx-auto px-4">
-                {/* Header Section */}
                 <div className="flex justify-between items-center mb-10">
                     <h1 className="text-5xl font-extrabold tracking-tight leading-tight">
                         {isDashboard ? 'Your Posts.' : 'All Posts.'}
@@ -216,7 +200,6 @@ export default function DisplayPosts({ isDashboard = false }) {
                     )}
                 </div>
 
-                {/* Filter Buttons */}
                 <div className="flex flex-wrap gap-3 mb-10">
                     {categories.map((category) => (
                         <Button
@@ -234,7 +217,6 @@ export default function DisplayPosts({ isDashboard = false }) {
                     ))}
                 </div>
 
-                {/* Edit Form */}
                 {isDashboard && editingPostId && (
                     <div className="mb-12 p-6 bg-gray-800 rounded-xl shadow-lg border border-gray-700">
                         <h2 className="text-3xl font-bold mb-6 text-white">Edit Post</h2>
@@ -313,7 +295,6 @@ export default function DisplayPosts({ isDashboard = false }) {
                     </div>
                 )}
 
-                {/* Posts Grid */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
                     {filteredPosts.map((post) => (
                         <div
@@ -329,14 +310,7 @@ export default function DisplayPosts({ isDashboard = false }) {
                                         alt={post.postName}
                                         onError={(e) => {
                                             console.error("Image failed to load:", post.postImg);
-                                            // Try alternative endpoint if first approach fails
-                                            if (e.target.src.includes('/api/uploads/')) {
-                                                console.log("Retrying with public endpoint");
-                                                const filename = post.postImg.split('/').pop();
-                                                e.target.src = `/api/public/image/${filename}`;
-                                            } else {
-                                                e.target.src = postLogo;
-                                            }
+                                            e.target.src = postLogo;
                                         }}
                                     />
                                     <Badge
