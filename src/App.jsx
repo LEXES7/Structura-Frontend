@@ -5,6 +5,7 @@ import Addpost from './components/AddPost/Addpost';
 import Learn from './components/Learn/Learn';
 import Displaypost from './components/DisplayPosts/DisplayPosts';
 import FeaturesPage from './pages/FeaturesPage';
+import ReviewsHomePage from './components/ReviewsHomePage';
 
 
 
@@ -61,7 +62,7 @@ export default function App() {
 
 
 
-
+          <Route path="/reviews" element={<ReviewsHomePage />} />
           <Route path="/displaylearn" element={<Displaylearn />} />
           <Route path="/displaycourse" element={<DisplayCourse />} />
           <Route path="/addlearn" element={<Addlearn />} />

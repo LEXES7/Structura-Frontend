@@ -6,7 +6,6 @@ import { useNavigate } from 'react-router-dom';
 import { HiCalendar } from 'react-icons/hi';
 import postLogo from '../../assets/postlogo.png'; 
 
-
 const formatDate = (dateString) => {
     if (!dateString) return 'Date unavailable';
     try {
@@ -45,6 +44,7 @@ export default function DisplayPosts({ isDashboard = false }) {
                 const url = isDashboard ? '/api/posts/user' : '/api/posts';
                 const config = isDashboard && token ? { headers: { Authorization: `Bearer ${token}` } } : {};
                 const response = await axios.get(url, config);
+                console.log("Fetched posts:", response.data);
                 setPosts(response.data);
                 setLoading(false);
             } catch (err) {
@@ -57,7 +57,9 @@ export default function DisplayPosts({ isDashboard = false }) {
     }, [isDashboard, token]);
 
     const handleEditClick = (post) => {
-        setEditingPostId(post.id);
+        const postId = post._id || post.id;
+        console.log("Editing post:", postId, post);
+        setEditingPostId(postId);
         setEditFormData({
             postName: post.postName || '',
             postCategory: post.postCategory || '',
@@ -84,20 +86,22 @@ export default function DisplayPosts({ isDashboard = false }) {
         formData.append('postName', editFormData.postName);
         formData.append('postCategory', editFormData.postCategory);
         formData.append('postDescription', editFormData.postDescription);
-        if (newImage) formData.append('postImg', newImage);
+        if (newImage) formData.append('file', newImage);
 
         try {
+            console.log("Updating post:", editingPostId);
             const response = await axios.put(`/api/posts/${editingPostId}`, formData, {
                 headers: {
                     'Content-Type': 'multipart/form-data',
                     Authorization: `Bearer ${token}`,
                 },
             });
-            setPosts(posts.map(post => (post.id === editingPostId ? response.data : post)));
+            console.log("Post updated:", response.data);
+            setPosts(posts.map(post => ((post._id || post.id) === editingPostId ? response.data : post)));
             setEditingPostId(null);
         } catch (err) {
             console.error('Error updating post:', err);
-            setError('Failed to update post.');
+            setError('Failed to update post: ' + (err.response?.data?.message || err.message));
         }
     };
 
@@ -113,13 +117,14 @@ export default function DisplayPosts({ isDashboard = false }) {
         }
         if (window.confirm('Are you sure you want to delete this post?')) {
             try {
+                console.log("Deleting post:", postId);
                 await axios.delete(`/api/posts/${postId}`, {
                     headers: { Authorization: `Bearer ${token}` },
                 });
-                setPosts(posts.filter(post => post.id !== postId));
+                setPosts(posts.filter(post => (post._id !== postId && post.id !== postId)));
             } catch (err) {
                 console.error('Error deleting post:', err);
-                setError('Failed to delete post.');
+                setError('Failed to delete post: ' + (err.response?.data?.message || err.message));
             }
         }
     };
@@ -135,11 +140,44 @@ export default function DisplayPosts({ isDashboard = false }) {
     const handleCategoryFilter = (category) => {
         setSelectedCategory(category);
     };
+    
+    // Updated getImageUrl function to use public endpoint
+    const getImageUrl = (imgPath) => {
+        console.log("Processing image path:", imgPath);
+        
+        if (!imgPath) {
+            console.log("No image path, using default");
+            return postLogo;
+        }
+        
+        if (imgPath === 'default.png') {
+            console.log("Default image, using logo");
+            return postLogo;
+        }
+        
+        // If it's a full URL, use it as is
+        if (imgPath.startsWith('http')) {
+            console.log("Using full URL:", imgPath);
+            return imgPath;
+        }
+        
+        // If it starts with /uploads/, extract the filename and use public endpoint
+        if (imgPath.startsWith('/uploads/')) {
+            const filename = imgPath.split('/').pop();
+            const publicUrl = `/api/public/image/${filename}`;
+            console.log("Image path converted to public endpoint:", imgPath, "→", publicUrl);
+            return publicUrl;
+        }
+        
+        // Otherwise use as is
+        console.log("Using path as is:", imgPath);
+        return imgPath;
+    };
 
     const filteredPosts = selectedCategory === 'All'
         ? posts
         : posts.filter(post => post.postCategory === selectedCategory);
-
+    
     const categories = ['All', ...new Set(posts.map(post => post.postCategory || 'Uncategorized'))];
 
     if (loading) {
@@ -153,7 +191,8 @@ export default function DisplayPosts({ isDashboard = false }) {
     if (error) {
         return (
             <div className="container mx-auto px-4 py-8 text-center text-red-400 bg-gray-900">
-                {error}
+                <p className="mb-4">{error}</p>
+                <Button onClick={() => setError(null)}>Dismiss</Button>
             </div>
         );
     }
@@ -237,10 +276,10 @@ export default function DisplayPosts({ isDashboard = false }) {
                             <div>
                                 <Label value="Current Image" className="text-gray-300 mb-2" />
                                 <img
-                                    src={`/api${editFormData.postImg}`}
+                                    src={getImageUrl(editFormData.postImg)}
                                     alt="Current"
                                     className="w-full h-40 object-cover rounded-lg shadow-md"
-                                    onError={(e) => (e.target.src = postLogo)} // Updated placeholder
+                                    onError={(e) => (e.target.src = postLogo)}
                                 />
                             </div>
                             <div>
@@ -278,17 +317,27 @@ export default function DisplayPosts({ isDashboard = false }) {
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
                     {filteredPosts.map((post) => (
                         <div
-                            key={post.id}
+                            key={post._id || post.id}
                             className="bg-gray-800 rounded-xl shadow-lg overflow-hidden cursor-pointer transform transition-all duration-300 hover:shadow-xl hover:-translate-y-1"
-                            onClick={() => handlePostClick(post.id)}
+                            onClick={() => handlePostClick(post._id || post.id)}
                         >
                             {post.postImg && post.postImg !== 'default.png' ? (
                                 <div className="relative">
                                     <img
                                         className="w-full h-56 object-cover rounded-t-xl"
-                                        src={`/api${post.postImg}`}
+                                        src={getImageUrl(post.postImg)}
                                         alt={post.postName}
-                                        onError={(e) => (e.target.src = postLogo)} // Updated placeholder
+                                        onError={(e) => {
+                                            console.error("Image failed to load:", post.postImg);
+                                            // Try alternative endpoint if first approach fails
+                                            if (e.target.src.includes('/api/uploads/')) {
+                                                console.log("Retrying with public endpoint");
+                                                const filename = post.postImg.split('/').pop();
+                                                e.target.src = `/api/public/image/${filename}`;
+                                            } else {
+                                                e.target.src = postLogo;
+                                            }
+                                        }}
                                     />
                                     <Badge
                                         color="info"
@@ -342,7 +391,7 @@ export default function DisplayPosts({ isDashboard = false }) {
                                             size="sm"
                                             onClick={(e) => {
                                                 e.stopPropagation();
-                                                handleDelete(post.id);
+                                                handleDelete(post._id || post.id);
                                             }}
                                             className="rounded-full px-4 py-1"
                                         >

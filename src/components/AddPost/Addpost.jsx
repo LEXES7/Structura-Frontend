@@ -23,7 +23,18 @@ export default function Addpost() {
     };
 
     const handleFileChange = (e) => {
-        setFile(e.target.files[0]);
+        const selectedFile = e.target.files[0];
+        setFile(selectedFile);
+        
+        // Log file info for debugging
+        if (selectedFile) {
+            console.log("Selected file:", {
+                name: selectedFile.name,
+                size: selectedFile.size,
+                type: selectedFile.type,
+                lastModified: new Date(selectedFile.lastModified).toISOString()
+            });
+        }
     };
 
     const handleSubmit = async (e) => {
@@ -43,7 +54,19 @@ export default function Addpost() {
             data.append('postName', formData.postName);
             data.append('postCategory', formData.postCategory);
             data.append('postDescription', formData.postDescription);
-            if (file) data.append('file', file);
+            
+            if (file) {
+                data.append('file', file);
+                console.log("Attaching file to form data:", file.name);
+            }
+
+            console.log('Submitting form data:', {
+                postName: formData.postName,
+                postCategory: formData.postCategory,
+                postDescription: formData.postDescription,
+                fileIncluded: !!file,
+                fileSize: file ? file.size : 'No file'
+            });
 
             const response = await axios.post('/api/posts', data, {
                 headers: {
@@ -56,10 +79,14 @@ export default function Addpost() {
             console.log('Post created:', response.data);
             setFormData({ postName: '', postCategory: '', postDescription: '' });
             setFile(null);
-            navigate('/dashboard?tab=profile');
+            
+            // Short delay before navigation to show success message
+            setTimeout(() => {
+                navigate('/dashboard?tab=profile');
+            }, 1500);
         } catch (err) {
             console.error('Error creating post:', err);
-            setError(err.response?.data?.message || 'Failed to create post');
+            setError(err.response?.data?.message || 'Failed to create post. Please check your form and try again.');
         } finally {
             setLoading(false);
         }
@@ -68,8 +95,8 @@ export default function Addpost() {
     return (
         <div className="max-w-lg mx-auto p-6 bg-white shadow-md rounded-lg">
             <h2 className="text-2xl font-bold mb-6 text-gray-800">Add New Post</h2>
-            {success && <p className="text-green-500 mb-4">{success}</p>}
-            {error && <p className="text-red-500 mb-4">{error}</p>}
+            {success && <p className="text-green-500 mb-4 p-3 bg-green-50 rounded-md">{success}</p>}
+            {error && <p className="text-red-500 mb-4 p-3 bg-red-50 rounded-md">{error}</p>}
 
             <form onSubmit={handleSubmit} className="space-y-6">
                 <div>
@@ -118,10 +145,24 @@ export default function Addpost() {
                         accept="image/*"
                         className="mt-1"
                     />
-                    {file && <p className="text-sm text-gray-500 mt-1">Selected: {file.name}</p>}
+                    {file && (
+                        <div className="text-sm text-gray-500 mt-1">
+                            <p>Selected: {file.name}</p>
+                            <p>Size: {(file.size / 1024).toFixed(2)} KB</p>
+                            <p>Type: {file.type}</p>
+                        </div>
+                    )}
+                    <p className="text-xs text-gray-500 mt-1">
+                        Max file size: 10MB. Supported formats: JPG, PNG, GIF.
+                    </p>
                 </div>
                 <Button type="submit" color="blue" className="w-full" disabled={loading}>
-                    {loading ? 'Adding...' : 'Add Post'}
+                    {loading ? (
+                        <div className="flex items-center justify-center">
+                            <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
+                            <span>Uploading...</span>
+                        </div>
+                    ) : 'Add Post'}
                 </Button>
             </form>
         </div>
