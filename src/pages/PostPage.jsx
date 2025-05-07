@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { useSelector } from 'react-redux';
 import { Button, Textarea, Badge } from 'flowbite-react';
-import { HiCalendar, HiLockClosed } from 'react-icons/hi';
+import { HiCalendar, HiLockClosed, HiThumbUp, HiShare, HiUsers } from 'react-icons/hi';
 import postLogo from '../assets/postlogo.png';
 
 const formatDate = (dateString) => {
@@ -33,6 +33,10 @@ export default function PostPage() {
     const { currentUser } = useSelector((state) => state.user);
     const navigate = useNavigate();
     const BASE_URL = 'http://localhost:8080';
+    const [isLiked, setIsLiked] = useState(false);
+    const [likeCount, setLikeCount] = useState(0);
+    const [shareCount, setShareCount] = useState(0);
+    const [shareUrl, setShareUrl] = useState('');
 
     const getImageUrl = (imgPath) => {
         console.log("Processing image path:", imgPath);
@@ -50,12 +54,6 @@ export default function PostPage() {
     };
 
     useEffect(() => {
-        // Remove the redirect for non-authenticated users
-        // if (!currentUser) {
-        //    navigate('/signin');
-        //    return;
-        // }
-
         const fetchPostAndComments = async () => {
             try {
                 console.log(`Fetching post from ${BASE_URL}/api/posts/${postId}`);
@@ -63,6 +61,16 @@ export default function PostPage() {
                 const postResponse = await axios.get(`${BASE_URL}/api/posts/${postId}`);
                 console.log("Post fetched:", postResponse.data);
                 setPost(postResponse.data);
+                
+                // Set like status and counts
+                if (postResponse.data && postResponse.data.likedBy) {
+                    setLikeCount(postResponse.data.likedBy.length);
+                    setIsLiked(currentUser && postResponse.data.likedBy.includes(currentUser.id));
+                }
+                
+                setShareCount(postResponse.data.shareCount || 0);
+                // Set share URL for this post
+                setShareUrl(window.location.href);
 
                 console.log(`Fetching comments from ${BASE_URL}/api/comments/post/${postId}`);
                 // Make request without authentication headers for public access
@@ -78,7 +86,73 @@ export default function PostPage() {
         };
 
         fetchPostAndComments();
-    }, [postId, navigate]);
+    }, [postId, currentUser, navigate]);
+
+    const handleLike = async () => {
+        if (!currentUser) {
+            navigate('/signin?redirect=' + encodeURIComponent(`/post/${postId}`));
+            return;
+        }
+        
+        try {
+            console.log("Sending like request with token:", currentUser.token);
+            const response = await axios.post(
+                `${BASE_URL}/api/posts/${postId}/like`,
+                {}, // Empty body
+                {
+                    headers: {
+                        'Authorization': `Bearer ${currentUser.token}`,
+                        'Content-Type': 'application/json'
+                    }
+                }
+            );
+            
+            const updatedPost = response.data;
+            console.log("Like response:", updatedPost);
+            setPost(updatedPost);
+            
+            // Update like states
+            if (updatedPost && updatedPost.likedBy) {
+                setLikeCount(updatedPost.likedBy.length);
+                setIsLiked(updatedPost.likedBy.includes(currentUser.id));
+            }
+        } catch (error) {
+            console.error('Error toggling like:', error);
+            console.error('Error response:', error.response?.data);
+            setError('Failed to update like. Please try again.');
+        }
+    };
+
+    const handleShare = async () => {
+        try {
+            // First, increment the share count on the server
+            const response = await axios.post(`${BASE_URL}/api/posts/${postId}/share`);
+            setShareCount(response.data.shareCount);
+            
+            // Then use the Web Share API if available
+            if (navigator.share) {
+                await navigator.share({
+                    title: post.postName,
+                    text: post.postDescription?.substring(0, 100) + '...',
+                    url: window.location.href,
+                });
+            } else {
+                // Fallback - copy to clipboard
+                await navigator.clipboard.writeText(window.location.href);
+                alert('Link copied to clipboard!');
+            }
+        } catch (error) {
+            console.error('Error sharing post:', error);
+            // If Web Share API fails, try to copy to clipboard
+            try {
+                await navigator.clipboard.writeText(window.location.href);
+                alert('Link copied to clipboard!');
+            } catch (clipboardError) {
+                console.error('Error copying to clipboard:', clipboardError);
+                setError('Failed to share post. Please try again.');
+            }
+        }
+    };
 
     const handleCommentSubmit = async (e) => {
         e.preventDefault();
@@ -186,6 +260,13 @@ export default function PostPage() {
                 const postResponse = await axios.get(`${BASE_URL}/api/posts/${postId}`);
                 console.log("Post fetched on retry:", postResponse.data);
                 setPost(postResponse.data);
+                
+                // Update like and share counts
+                if (postResponse.data && postResponse.data.likedBy) {
+                    setLikeCount(postResponse.data.likedBy.length);
+                    setIsLiked(currentUser && postResponse.data.likedBy.includes(currentUser.id));
+                }
+                setShareCount(postResponse.data.shareCount || 0);
 
                 console.log(`Retrying fetch comments from ${BASE_URL}/api/comments/post/${postId}`);
                 // Make request without authentication headers for public access
@@ -214,7 +295,7 @@ export default function PostPage() {
         return (
             <div className="container mx-auto px-4 py-8 text-center text-red-400 bg-gray-900">
                 {error === "Post not found" ? "The requested post does not exist." : error}
-                <Button onClick={handleRetry} className="mt-4" gradientDuoTone="purpleToBlue">
+                <Button onClick={handleRetry} className="mt-4" color="blue">
                     Retry
                 </Button>
             </div>
@@ -271,6 +352,44 @@ export default function PostPage() {
                         <p className="text-gray-300 text-lg leading-relaxed">
                             {post.postDescription || 'No description available.'}
                         </p>
+                        
+                        {/* Like and Share buttons */}
+                        <div className="flex items-center mt-6 space-x-4 border-t border-gray-700 pt-6">
+                            <Button
+                                color={isLiked ? "success" : "gray"}
+                                className={`flex items-center px-6 py-2 ${isLiked ? 'bg-blue-600 hover:bg-blue-700' : 'bg-gray-700 hover:bg-gray-600'}`}
+                                onClick={handleLike}
+                            >
+                                <HiThumbUp className="mr-2" /> 
+                                {isLiked ? 'Liked' : 'Like'} 
+                                {likeCount > 0 && (
+                                    <span className="ml-2 bg-gray-800 text-white text-xs rounded-full px-2 py-1">
+                                        {likeCount}
+                                    </span>
+                                )}
+                            </Button>
+                            
+                            <Button
+                                color="gray"
+                                className="flex items-center px-6 py-2 bg-gray-700 hover:bg-gray-600"
+                                onClick={handleShare}
+                            >
+                                <HiShare className="mr-2" /> 
+                                Share
+                                {shareCount > 0 && (
+                                    <span className="ml-2 bg-gray-800 text-white text-xs rounded-full px-2 py-1">
+                                        {shareCount}
+                                    </span>
+                                )}
+                            </Button>
+                            
+                            <div className="flex items-center text-gray-400">
+                                <HiUsers className="mr-1" /> 
+                                <span className="text-sm">
+                                    {comments.length} {comments.length === 1 ? 'comment' : 'comments'}
+                                </span>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -291,7 +410,7 @@ export default function PostPage() {
                                     <p className="text-red-400 text-sm mt-2">{error}</p>
                                 )}
                                 <Button
-                                    gradientDuoTone="purpleToBlue"
+                                    color="blue"
                                     className="mt-3 rounded-full px-6 py-2"
                                     onClick={handleCommentSubmit}
                                 >
@@ -304,7 +423,7 @@ export default function PostPage() {
                                     <HiLockClosed className="mr-2" /> Sign in to comment on this post
                                 </p>
                                 <Button
-                                    gradientDuoTone="purpleToBlue"
+                                    color="blue"
                                     onClick={() => navigate('/signin?redirect=' + encodeURIComponent(`/post/${postId}`))}
                                 >
                                     Sign In
@@ -333,7 +452,7 @@ export default function PostPage() {
                                             <div className="flex space-x-3">
                                                 <Button
                                                     size="sm"
-                                                    gradientDuoTone="purpleToBlue"
+                                                    color="blue"
                                                     className="rounded-full px-4 py-1"
                                                     onClick={() => {
                                                         setEditingCommentId(comment.id);
@@ -344,7 +463,7 @@ export default function PostPage() {
                                                 </Button>
                                                 <Button
                                                     size="sm"
-                                                    gradientDuoTone="redToYellow"
+                                                    color="red"
                                                     className="rounded-full px-4 py-1"
                                                     onClick={() => handleDeleteComment(comment.id)}
                                                 >
@@ -366,7 +485,7 @@ export default function PostPage() {
                                             )}
                                             <div className="flex space-x-3 mt-3">
                                                 <Button
-                                                    gradientDuoTone="purpleToBlue"
+                                                    color="blue"
                                                     className="rounded-full px-6 py-2"
                                                     onClick={() => handleEditComment(comment.id)}
                                                 >
