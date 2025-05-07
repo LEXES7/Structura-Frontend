@@ -100,26 +100,26 @@ export default function DashSidebar() {
             </SidebarItem>
 
             {/* User Specific Items */}
-            {!isAdmin && (
-              <>
-                <SidebarItem 
-                  icon={HiOutlineCalendar} 
-                  as={Link} 
-                  to="/displaypost"
-                  active={isActive('/displaypost')}
-                >
-                  My Posts
-                </SidebarItem>
-                <SidebarItem 
-                  icon={HiOutlinePencil} 
-                  as={Link} 
-                  to="/addpost"
-                  active={isActive('/addpost')}
-                >
-                  Create Post
-                </SidebarItem>
-              </>
-            )}
+{!isAdmin && (
+  <>
+    <SidebarItem 
+      icon={HiOutlineCalendar} 
+      as={Link} 
+      to="/dashboard?tab=displaypost"  // Changed from /displaypost to /dashboard?tab=displaypost
+      active={isActive('/dashboard?tab=displaypost')}
+    >
+      My Posts
+    </SidebarItem>
+    <SidebarItem 
+      icon={HiOutlinePencil} 
+      as={Link} 
+      to="/addpost"
+      active={isActive('/addpost')}
+    >
+      Create Post
+    </SidebarItem>
+  </>
+)}
              
             {/* Admin Specific Items */}
             {isAdmin && (

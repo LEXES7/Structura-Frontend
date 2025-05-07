@@ -43,7 +43,21 @@ export default function Dashboard() {
       <div className="flex-1 p-4 overflow-auto">
         <h1 className="text-3xl font-bold mb-6">Dashboard</h1>
         
-        
+        {/* Simple tab navigation */}
+        <div className="flex mb-6 border-b">
+          <button
+            onClick={() => handleTabChange('profile')}
+            className={`px-4 py-2 ${tab === 'profile' ? 'border-b-2 border-blue-600 text-blue-600' : ''}`}
+          >
+            <HiUserCircle className="inline mr-2" /> Profile
+          </button>
+          <button
+            onClick={() => handleTabChange('displaypost')}
+            className={`px-4 py-2 ${tab === 'displaypost' ? 'border-b-2 border-blue-600 text-blue-600' : ''}`}
+          >
+            <HiDocumentText className="inline mr-2" /> My Posts
+          </button>
+        </div>
         
         {/* Render content based on the tab */}
         {tab === 'displaypost' && <DisplayPosts isDashboard={true} />}

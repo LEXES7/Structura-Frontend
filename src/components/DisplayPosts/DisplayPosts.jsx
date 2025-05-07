@@ -3,7 +3,7 @@ import axios from 'axios';
 import { Button, Label, TextInput, Textarea, Badge, Spinner } from 'flowbite-react';
 import { useSelector, useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
-import { HiCalendar, HiExclamation } from 'react-icons/hi';
+import { HiCalendar, HiExclamation, HiTrash, HiPencil } from 'react-icons/hi';
 import postLogo from '../../assets/postlogo.png';
 import { fetchUserPostsSuccess } from '../../redux/userSlice';
 
@@ -191,17 +191,13 @@ export default function DisplayPosts({ isDashboard = false }) {
     };
 
     const getImageUrl = (imgPath) => {
-        console.log("Processing image path:", imgPath);
         if (!imgPath || imgPath === 'default.png') {
-            console.log("Using default image");
             return postLogo;
         }
         if (imgPath.startsWith('http')) {
-            console.log("Using full URL:", imgPath);
             return imgPath;
         }
         const url = `${BASE_URL}${imgPath}`;
-        console.log("Constructed image URL:", url);
         return url;
     };
 
@@ -231,8 +227,13 @@ export default function DisplayPosts({ isDashboard = false }) {
         );
     }
 
-    const containerClassName = isDashboard ? "bg-white rounded-lg shadow p-6" : "bg-gradient-to-b from-gray-900 to-gray-800 text-white min-h-screen py-12";
-    const titleColor = isDashboard ? "text-gray-900" : "text-white";
+    const containerClassName = isDashboard 
+        ? "bg-white dark:bg-gray-900 rounded-lg shadow p-6" 
+        : "bg-gradient-to-b from-gray-900 to-gray-800 text-white min-h-screen py-12";
+    
+    const titleColor = isDashboard 
+        ? "text-gray-900 dark:text-white" 
+        : "text-white";
 
     return (
         <div className={containerClassName}>
@@ -243,8 +244,8 @@ export default function DisplayPosts({ isDashboard = false }) {
                     </h1>
                     {isDashboard && (
                         <Button
-                            gradientDuoTone="purpleToBlue"
-                            className="rounded-full px-6 py-2 shadow-lg"
+                            color="blue"
+                            className="rounded-full px-6 py-2 shadow-lg text-white"
                             onClick={handleAddPost}
                         >
                             Add Post
@@ -254,20 +255,30 @@ export default function DisplayPosts({ isDashboard = false }) {
 
                 {/* Display message if no posts are available */}
                 {!loading && filteredPosts.length === 0 && (
-                    <div className={`text-center ${isDashboard ? 'bg-gray-50' : 'bg-gray-800'} p-8 rounded-xl shadow-lg mt-8`}>
-                        <h3 className={`text-2xl font-semibold mb-4 ${isDashboard ? 'text-gray-800' : 'text-white'}`}>
+                    <div className={`text-center ${
+                        isDashboard 
+                            ? 'bg-gray-50 dark:bg-gray-800 dark:text-white' 
+                            : 'bg-gray-800 text-white'
+                    } p-8 rounded-xl shadow-lg mt-8`}>
+                        <h3 className={`text-2xl font-semibold mb-4 ${
+                            isDashboard 
+                                ? 'text-gray-800 dark:text-white' 
+                                : 'text-white'
+                        }`}>
                             No posts available
                         </h3>
                         {isDashboard ? (
-                            <p className="text-gray-600 mb-6">You haven't created any posts yet. Get started by adding your first post!</p>
+                            <p className="text-gray-600 dark:text-gray-300 mb-6">
+                                You haven't created any posts yet. Get started by adding your first post!
+                            </p>
                         ) : (
                             <p className="text-gray-400 mb-6">There are no posts available at this time.</p>
                         )}
                         {isDashboard && (
                             <Button
-                                gradientDuoTone="purpleToBlue"
+                                color="blue"
                                 onClick={handleAddPost}
-                                className="rounded-full px-6 py-2"
+                                className="rounded-full px-6 py-2 text-white"
                             >
                                 Create Your First Post
                             </Button>
@@ -286,10 +297,10 @@ export default function DisplayPosts({ isDashboard = false }) {
                                     className={`rounded-full px-5 py-2 text-sm font-medium transition-all duration-300 ${
                                         selectedCategory === category
                                             ? isDashboard 
-                                                ? 'bg-blue-100 text-blue-700' 
+                                                ? 'bg-blue-100 text-blue-700 dark:bg-blue-700 dark:text-white' 
                                                 : 'bg-white text-gray-900 shadow-md'
                                             : isDashboard
-                                                ? 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                                                ? 'bg-gray-200 text-gray-700 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600'
                                                 : 'bg-gray-700 text-gray-200 hover:bg-gray-600'
                                     }`}
                                 >
@@ -299,31 +310,33 @@ export default function DisplayPosts({ isDashboard = false }) {
                         </div>
 
                         {isDashboard && editingPostId && (
-                            <div className="mb-12 p-6 bg-gray-50 rounded-xl shadow-lg border border-gray-200">
-                                <h2 className="text-2xl font-bold mb-6 text-gray-800">Edit Post</h2>
+                            <div className="mb-12 p-6 bg-gray-50 dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700">
+                                <h2 className="text-2xl font-bold mb-6 text-gray-800 dark:text-white">Edit Post</h2>
                                 <div className="space-y-6">
                                     <div>
-                                        <Label htmlFor="postName" value="Post Title" className="text-gray-700 mb-2" />
+                                        <Label htmlFor="postName" value="Post Title" className="text-gray-700 dark:text-gray-300 mb-2" />
                                         <TextInput
                                             id="postName"
                                             name="postName"
                                             value={editFormData.postName}
                                             onChange={handleEditChange}
                                             required
+                                            className="dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                                         />
                                     </div>
                                     <div>
-                                        <Label htmlFor="postCategory" value="Category" className="text-gray-700 mb-2" />
+                                        <Label htmlFor="postCategory" value="Category" className="text-gray-700 dark:text-gray-300 mb-2" />
                                         <TextInput
                                             id="postCategory"
                                             name="postCategory"
                                             value={editFormData.postCategory}
                                             onChange={handleEditChange}
                                             required
+                                            className="dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                                         />
                                     </div>
                                     <div>
-                                        <Label htmlFor="postDescription" value="Description" className="text-gray-700 mb-2" />
+                                        <Label htmlFor="postDescription" value="Description" className="text-gray-700 dark:text-gray-300 mb-2" />
                                         <Textarea
                                             id="postDescription"
                                             name="postDescription"
@@ -331,10 +344,11 @@ export default function DisplayPosts({ isDashboard = false }) {
                                             onChange={handleEditChange}
                                             rows={4}
                                             required
+                                            className="dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                                         />
                                     </div>
                                     <div>
-                                        <Label value="Current Image" className="text-gray-700 mb-2" />
+                                        <Label value="Current Image" className="text-gray-700 dark:text-gray-300 mb-2" />
                                         <img
                                             src={getImageUrl(editFormData.postImg)}
                                             alt="Current"
@@ -343,21 +357,21 @@ export default function DisplayPosts({ isDashboard = false }) {
                                         />
                                     </div>
                                     <div>
-                                        <Label htmlFor="postImg" value="Upload New Image" className="text-gray-700 mb-2" />
+                                        <Label htmlFor="postImg" value="Upload New Image" className="text-gray-700 dark:text-gray-300 mb-2" />
                                         <input
                                             type="file"
                                             id="postImg"
                                             name="postImg"
                                             accept="image/*"
                                             onChange={handleImageChange}
-                                            className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-600 file:text-white hover:file:bg-blue-700 transition-colors"
+                                            className="block w-full text-sm text-gray-500 dark:text-gray-300 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-600 file:text-white hover:file:bg-blue-700 transition-colors"
                                         />
                                     </div>
                                     <div className="flex space-x-3">
                                         <Button
-                                            gradientDuoTone="purpleToBlue"
+                                            color="blue"
                                             onClick={handleSaveEdit}
-                                            className="rounded-full px-6 py-2"
+                                            className="rounded-full px-6 py-2 text-white"
                                         >
                                             Save
                                         </Button>
@@ -377,7 +391,15 @@ export default function DisplayPosts({ isDashboard = false }) {
                             {filteredPosts.map((post) => (
                                 <div
                                     key={post._id || post.id}
-                                    className={`${isDashboard ? 'bg-white' : 'bg-gray-800'} rounded-xl shadow-lg overflow-hidden cursor-pointer transform transition-all duration-300 hover:shadow-xl hover:-translate-y-1 border ${isDashboard ? 'border-gray-200' : 'border-gray-700'}`}
+                                    className={`${
+                                        isDashboard 
+                                            ? 'bg-white dark:bg-gray-800' 
+                                            : 'bg-gray-800'
+                                    } rounded-xl shadow-lg overflow-hidden cursor-pointer transform transition-all duration-300 hover:shadow-xl hover:-translate-y-1 border ${
+                                        isDashboard 
+                                            ? 'border-gray-200 dark:border-gray-700' 
+                                            : 'border-gray-700'
+                                    }`}
                                     onClick={() => handlePostClick(post._id || post.id)}
                                 >
                                     {post.postImg && post.postImg !== 'default.png' ? (
@@ -400,7 +422,11 @@ export default function DisplayPosts({ isDashboard = false }) {
                                             </Badge>
                                         </div>
                                     ) : (
-                                        <div className={`relative w-full h-56 ${isDashboard ? 'bg-gray-100' : 'bg-gray-600'} flex items-center justify-center rounded-t-xl`}>
+                                        <div className={`relative w-full h-56 ${
+                                            isDashboard 
+                                                ? 'bg-gray-100 dark:bg-gray-700' 
+                                                : 'bg-gray-600'
+                                        } flex items-center justify-center rounded-t-xl`}>
                                             <img
                                                 src={postLogo}
                                                 alt="Placeholder"
@@ -416,39 +442,45 @@ export default function DisplayPosts({ isDashboard = false }) {
                                         </div>
                                     )}
                                     <div className="p-5">
-                                        <h2 className={`text-xl font-semibold ${isDashboard ? 'text-gray-800' : 'text-white'} mb-3 line-clamp-2 leading-tight`}>
+                                        <h2 className={`text-xl font-semibold ${
+                                            isDashboard 
+                                                ? 'text-gray-800 dark:text-white' 
+                                                : 'text-white'
+                                        } mb-3 line-clamp-2 leading-tight`}>
                                             {post.postName}
                                         </h2>
                                         <Badge
                                             color={isDashboard ? "blue" : "gray"}
-                                            className={`mb-3 ${isDashboard ? 'bg-blue-100 text-blue-800' : 'bg-gray-600 text-gray-200'} px-3 py-1 rounded-full`}
+                                            className={`mb-3 ${
+                                                isDashboard 
+                                                    ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300' 
+                                                    : 'bg-gray-600 text-gray-200'
+                                            } px-3 py-1 rounded-full`}
                                         >
                                             {post.postCategory || 'Uncategorized'}
                                         </Badge>
                                         {isDashboard && (
                                             <div className="flex space-x-3 mt-4">
-                                                <Button
-                                                    gradientDuoTone="purpleToBlue"
-                                                    size="sm"
+                                                <button
                                                     onClick={(e) => {
                                                         e.stopPropagation();
                                                         handleEditClick(post);
                                                     }}
-                                                    className="rounded-full px-4 py-1"
+                                                    className="inline-flex items-center rounded-full bg-blue-600 px-4 py-1 text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
                                                 >
+                                                    <HiPencil className="-ml-1 mr-1 h-4 w-4" />
                                                     Edit
-                                                </Button>
-                                                <Button
-                                                    gradientDuoTone="redToYellow"
-                                                    size="sm"
+                                                </button>
+                                                <button
                                                     onClick={(e) => {
                                                         e.stopPropagation();
                                                         handleDelete(post._id || post.id);
                                                     }}
-                                                    className="rounded-full px-4 py-1"
+                                                    className="inline-flex items-center rounded-full bg-red-600 px-4 py-1 text-sm font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
                                                 >
+                                                    <HiTrash className="-ml-1 mr-1 h-4 w-4" />
                                                     Delete
-                                                </Button>
+                                                </button>
                                             </div>
                                         )}
                                     </div>
