@@ -79,7 +79,7 @@ export default function DashSidebar() {
       <Sidebar className="h-full">
         <SidebarItems>
           {/* User Profile Area */}
-          <div className="p-4 border-b border-gray-700">
+          <div className="p-4 ">
             <div className="flex items-center space-x-3 mb-2">
               <img 
                 src={currentUser.profilePicture || 'https://cdn.pixabay.com/photo/2019/08/11/18/59/icon-4399701_640.png'} 
@@ -195,14 +195,7 @@ export default function DashSidebar() {
                   Manage Reviews
                 </SidebarItem>
                 
-                <SidebarItem 
-                  icon={HiOutlineUserCircle}
-                  as={Link}
-                  to="/admin-profile"
-                  active={isActive('/admin-profile')}
-                >
-                  Admin Settings
-                </SidebarItem>
+            
               </>
             )}
 
