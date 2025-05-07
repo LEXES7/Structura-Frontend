@@ -10,7 +10,9 @@ import {
   HiOutlineChartPie,
   HiOutlineCog,
   HiOutlineHome,
-  HiOutlinePencil
+  HiOutlinePencil,
+  HiOutlineUserCircle,
+  HiOutlineStar
 } from 'react-icons/hi';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
@@ -32,6 +34,20 @@ export default function DashSidebar() {
     return location.pathname === path;
   };
 
+  // Helper to check if admin tab is active
+  const isAdminTabActive = (tabName) => {
+    if (location.pathname === '/admin-dashboard') {
+      if (location.search) {
+        const params = new URLSearchParams(location.search);
+        const tab = params.get('tab');
+        return tab === tabName;
+      } else {
+        return location.state?.activeTab === tabName;
+      }
+    }
+    return false;
+  };
+
   const handleSignout = async () => {
     try {
       const res = await fetch('/api/user/signout', {
@@ -47,6 +63,11 @@ export default function DashSidebar() {
     } catch (error) {
       console.log(error.message);
     }
+  };
+
+  // Navigate to admin dashboard with specific tab
+  const navigateToAdminTab = (tabName) => {
+    navigate(`/admin-dashboard?tab=${tabName}`, { state: { activeTab: tabName } });
   };
 
   if (!currentUser) {
@@ -66,7 +87,7 @@ export default function DashSidebar() {
                 className="rounded-full h-10 w-10 object-cover"
               />
               <div>
-                <p className="text-sm font-medium text-white truncate">{currentUser.username}</p>
+                <p className="text-sm font-medium text-blue-500 truncate">{currentUser.username}</p>
                 <p className="text-xs text-gray-400 truncate">{currentUser.email}</p>
               </div>
             </div>
@@ -90,36 +111,37 @@ export default function DashSidebar() {
               Home
             </SidebarItem>
 
+            {/* Profile link - show regular profile for users, admin profile for admins */}
             <SidebarItem 
               icon={HiUser} 
               as={Link} 
-              to="/profile"
-              active={isActive('/profile')}
+              to={isAdmin ? "/admin-profile" : "/profile"}
+              active={isActive(isAdmin ? "/admin-profile" : "/profile")}
             >
-              Profile
+              {isAdmin ? "Admin Profile" : "Profile"}
             </SidebarItem>
 
             {/* User Specific Items */}
-{!isAdmin && (
-  <>
-    <SidebarItem 
-      icon={HiOutlineCalendar} 
-      as={Link} 
-      to="/dashboard?tab=displaypost"  // Changed from /displaypost to /dashboard?tab=displaypost
-      active={isActive('/dashboard?tab=displaypost')}
-    >
-      My Posts
-    </SidebarItem>
-    <SidebarItem 
-      icon={HiOutlinePencil} 
-      as={Link} 
-      to="/addpost"
-      active={isActive('/addpost')}
-    >
-      Create Post
-    </SidebarItem>
-  </>
-)}
+            {!isAdmin && (
+              <>
+                <SidebarItem 
+                  icon={HiOutlineCalendar} 
+                  as={Link} 
+                  to="/dashboard?tab=displaypost"
+                  active={isActive('/dashboard?tab=displaypost')}
+                >
+                  My Posts
+                </SidebarItem>
+                <SidebarItem 
+                  icon={HiOutlinePencil} 
+                  as={Link} 
+                  to="/addpost"
+                  active={isActive('/addpost')}
+                >
+                  Create Post
+                </SidebarItem>
+              </>
+            )}
              
             {/* Admin Specific Items */}
             {isAdmin && (
@@ -131,51 +153,55 @@ export default function DashSidebar() {
                 </div>
                 
                 <SidebarItem 
-                  icon={HiOutlineChartPie} 
-                  as={Link} 
-                  to="/admin-dashboard"
-                  active={isActive('/admin-dashboard') && !location.search}
+                  icon={HiOutlineChartPie}
+                  as={Link}
+                  to="/admin-dashboard" 
+                  active={location.pathname === '/admin-dashboard' && 
+                         (!location.search || 
+                          location.search === '?tab=overview')}
                 >
                   Dashboard
                 </SidebarItem>
                 
                 <SidebarItem 
                   icon={HiOutlineUsers} 
-                  as={Link} 
-                  to="/admin-dashboard"
-                  active={location.pathname === '/admin-dashboard' && location.state?.activeTab === 'users'}
-                  onClick={() => navigate('/admin-dashboard', { state: { activeTab: 'users' } })}
+                  active={isAdminTabActive('users')}
+                  onClick={() => navigateToAdminTab('users')}
                 >
                   Manage Users
                 </SidebarItem>
                 
                 <SidebarItem 
                   icon={HiOutlineAcademicCap} 
-                  as={Link} 
-                  to="/admin-dashboard"
-                  active={location.pathname === '/admin-dashboard' && location.state?.activeTab === 'courses'}
-                  onClick={() => navigate('/admin-dashboard', { state: { activeTab: 'courses' } })}
+                  active={isAdminTabActive('courses')}
+                  onClick={() => navigateToAdminTab('courses')}
                 >
                   Manage Courses
                 </SidebarItem>
                 
                 <SidebarItem 
                   icon={HiOutlineDocumentText} 
-                  as={Link} 
-                  to="/admin-dashboard"
-                  active={location.pathname === '/admin-dashboard' && location.state?.activeTab === 'posts'}
-                  onClick={() => navigate('/admin-dashboard', { state: { activeTab: 'posts' } })}
+                  active={isAdminTabActive('posts')}
+                  onClick={() => navigateToAdminTab('posts')}
                 >
                   Manage Posts
                 </SidebarItem>
                 
                 <SidebarItem 
-                  icon={HiOutlineCog} 
-                  as={Link} 
-                  to="/profile"
-                  active={isActive('/profile')}
+                  icon={HiOutlineStar} 
+                  active={isAdminTabActive('reviews')}
+                  onClick={() => navigateToAdminTab('reviews')}
                 >
-                  Settings
+                  Manage Reviews
+                </SidebarItem>
+                
+                <SidebarItem 
+                  icon={HiOutlineUserCircle}
+                  as={Link}
+                  to="/admin-profile"
+                  active={isActive('/admin-profile')}
+                >
+                  Admin Settings
                 </SidebarItem>
               </>
             )}

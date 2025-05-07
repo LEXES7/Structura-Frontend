@@ -24,7 +24,7 @@ import {
   ModalBody 
 } from 'flowbite-react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { HiUser, HiKey, HiOutlineChartPie, HiOutlineCog } from 'react-icons/hi';
+import { HiUser, HiKey, HiOutlineChartPie, HiOutlineCog, HiCheck } from 'react-icons/hi';
 import DashSidebar from '../components/DashSidebar';
 
 export default function AdminProfile() {
@@ -32,15 +32,38 @@ export default function AdminProfile() {
   const [formData, setFormData] = useState({});
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [activeTab, setActiveTab] = useState('profile');
+  const [updateMessage, setUpdateMessage] = useState('');
+  const [updateStatus, setUpdateStatus] = useState(null); // 'success' or 'error'
   const [siteStats, setSiteStats] = useState({
     totalUsers: 0,
     totalPosts: 0,
     totalCourses: 0
   });
   const [isLoading, setIsLoading] = useState(false);
+  const [darkMode, setDarkMode] = useState(false);
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const location = useLocation();
+
+  // Check if system is in dark mode
+  useEffect(() => {
+    // Check if user prefers dark mode
+    if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+      setDarkMode(true);
+    }
+    
+    // Listen for changes in color scheme preference
+    const darkModeMediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+    const handleDarkModeChange = (e) => setDarkMode(e.matches);
+    
+    // Add event listener
+    darkModeMediaQuery.addEventListener('change', handleDarkModeChange);
+    
+    // Cleanup function
+    return () => {
+      darkModeMediaQuery.removeEventListener('change', handleDarkModeChange);
+    };
+  }, []);
 
   // Check if tab is specified in URL
   useEffect(() => {
@@ -112,10 +135,18 @@ export default function AdminProfile() {
     setFormData({ ...formData, [e.target.id]: e.target.value.trim() });
   };
 
-  const handleUpdate = async (e) => {
+  const handleUpdateProfile = async (e) => {
     e.preventDefault();
+    
+    if (Object.keys(formData).length === 0) {
+      setUpdateStatus('error');
+      setUpdateMessage('No changes to update');
+      return;
+    }
+    
     try {
       dispatch(updateStart());
+      
       const res = await fetch(`http://localhost:8080/api/user/update/${currentUser.id}`, {
         method: 'PUT',
         headers: {
@@ -124,15 +155,98 @@ export default function AdminProfile() {
         },
         body: JSON.stringify(formData),
       });
+      
       const data = await res.json();
+      
       if (!data.success) {
         dispatch(updateFailure(data.message));
+        setUpdateStatus('error');
+        setUpdateMessage(data.message || 'Failed to update profile');
       } else {
-        dispatch(updateSuccess({ ...data, token: currentUser.token }));
+        dispatch(updateSuccess({ ...data.user, token: currentUser.token }));
+        setUpdateStatus('success');
+        setUpdateMessage('Profile updated successfully');
+        
+        // Clear the form data after successful update
+        setFormData({});
       }
     } catch (err) {
       dispatch(updateFailure(err.message));
+      setUpdateStatus('error');
+      setUpdateMessage(err.message || 'Network error');
     }
+    
+    // Clear message after 5 seconds
+    setTimeout(() => {
+      setUpdateStatus(null);
+      setUpdateMessage('');
+    }, 5000);
+  };
+
+  const handleUpdatePassword = async (e) => {
+    e.preventDefault();
+    
+    // Validate passwords
+    if (formData.newPassword !== formData.confirmPassword) {
+      setUpdateStatus('error');
+      setUpdateMessage('New passwords do not match');
+      return;
+    }
+    
+    if (!formData.password) {
+      setUpdateStatus('error');
+      setUpdateMessage('Current password is required');
+      return;
+    }
+    
+    try {
+      dispatch(updateStart());
+      
+      const res = await fetch(`http://localhost:8080/api/user/change-password/${currentUser.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${currentUser.token}`,
+        },
+        body: JSON.stringify({
+          currentPassword: formData.password,
+          newPassword: formData.newPassword
+        }),
+      });
+      
+      const data = await res.json();
+      
+      if (!data.success) {
+        dispatch(updateFailure(data.message));
+        setUpdateStatus('error');
+        setUpdateMessage(data.message || 'Failed to update password');
+      } else {
+        dispatch(updateSuccess({ ...currentUser, token: currentUser.token }));
+        setUpdateStatus('success');
+        setUpdateMessage('Password updated successfully');
+        
+        // Clear the password fields
+        setFormData({
+          ...formData, 
+          password: '',
+          newPassword: '',
+          confirmPassword: ''
+        });
+        
+        // Reset form fields
+        e.target.reset();
+      }
+    } catch (err) {
+      dispatch(updateFailure(err.message));
+      setUpdateStatus('error');
+      setUpdateMessage(err.message || 'Network error');
+    }
+    
+    // Clear message after 5 seconds
+    setTimeout(() => {
+      setUpdateStatus(null);
+      setUpdateMessage('');
+    }, 5000);
   };
 
   const handleDelete = async () => {
@@ -148,9 +262,13 @@ export default function AdminProfile() {
         navigate('/signin');
       } else {
         dispatch(deleteUserFailure(data.message || 'Failed to delete account'));
+        setUpdateStatus('error');
+        setUpdateMessage(data.message || 'Failed to delete account');
       }
     } catch (err) {
       dispatch(deleteUserFailure(err.message || 'Network error: Could not delete account'));
+      setUpdateStatus('error');
+      setUpdateMessage(err.message || 'Network error: Could not delete account');
     }
   };
 
@@ -167,8 +285,13 @@ export default function AdminProfile() {
     return null;
   }
 
+  // Custom button class based on color mode
+  const updateButtonClass = darkMode 
+    ? "bg-blue-600 hover:bg-blue-700 text-white" 
+    : "bg-gray-900 hover:bg-gray-800 text-white";
+
   return (
-    <div className="flex min-h-screen bg-gray-100">
+    <div className="flex min-h-screen bg-gray-100 dark:bg-gray-900">
       {/* Sidebar */}
       <div className="w-64">
         <DashSidebar />
@@ -187,14 +310,14 @@ export default function AdminProfile() {
             <div className="flex flex-col md:flex-1">
               <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-2">
                 <div>
-                  <h1 className="text-2xl font-bold text-gray-800">{currentUser.username}</h1>
-                  <p className="text-gray-500">{currentUser.email}</p>
+                  <h1 className="text-2xl font-bold text-gray-800 dark:text-white">{currentUser.username}</h1>
+                  <p className="text-gray-500 dark:text-gray-400">{currentUser.email}</p>
                 </div>
                 <Badge color="success" className="self-start md:self-auto">
                   Administrator
                 </Badge>
               </div>
-              <p className="text-sm text-gray-600 mt-2">
+              <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">
                 You have administrator privileges and can access all platform features.
               </p>
             </div>
@@ -204,6 +327,19 @@ export default function AdminProfile() {
             Sign Out
           </Button>
         </Card>
+
+        {/* Status messages */}
+        {updateMessage && (
+          <Alert color={updateStatus === 'success' ? 'success' : 'failure'} className="mb-6">
+            {updateStatus === 'success' ? (
+              <div className="flex items-center">
+                <HiCheck className="mr-2" /> {updateMessage}
+              </div>
+            ) : (
+              updateMessage
+            )}
+          </Alert>
+        )}
 
         {/* Tabs Navigation */}
         <div className="mb-6">
@@ -218,7 +354,7 @@ export default function AdminProfile() {
               }}
             >
               <Card>
-                <form onSubmit={handleUpdate} className="flex flex-col gap-4">
+                <form onSubmit={handleUpdateProfile} className="flex flex-col gap-4">
                   <TextInput
                     id="username"
                     defaultValue={currentUser.username}
@@ -235,9 +371,20 @@ export default function AdminProfile() {
                     label="Email"
                     required
                   />
-                  <Button type="submit" gradientDuoTone="cyanToBlue" disabled={loading}>
-                    {loading ? 'Updating...' : 'Update Profile'}
-                  </Button>
+                  <div className="flex justify-end">
+                    <button 
+                      type="submit" 
+                      disabled={loading}
+                      className={`px-4 py-2 rounded-lg font-medium mt-4 transition-colors ${updateButtonClass} disabled:opacity-50`}
+                    >
+                      {loading ? (
+                        <>
+                          <Spinner size="sm" className="mr-2" />
+                          Updating...
+                        </>
+                      ) : 'Update Profile'}
+                    </button>
+                  </div>
                 </form>
               </Card>
             </Tabs.Item>
@@ -252,14 +399,15 @@ export default function AdminProfile() {
               }}
             >
               <Card>
-                <h2 className="text-xl font-bold text-gray-800 mb-4">Security Settings</h2>
-                <form onSubmit={handleUpdate} className="flex flex-col gap-4">
+                <h2 className="text-xl font-bold text-gray-800 dark:text-white mb-4">Security Settings</h2>
+                <form onSubmit={handleUpdatePassword} className="flex flex-col gap-4">
                   <TextInput
                     id="password"
                     type="password"
                     placeholder="Current Password"
                     onChange={handleChange}
                     label="Current Password"
+                    required
                   />
                   <TextInput
                     id="newPassword"
@@ -267,6 +415,7 @@ export default function AdminProfile() {
                     placeholder="New Password"
                     onChange={handleChange}
                     label="New Password"
+                    required
                   />
                   <TextInput
                     id="confirmPassword"
@@ -274,10 +423,22 @@ export default function AdminProfile() {
                     placeholder="Confirm New Password"
                     onChange={handleChange}
                     label="Confirm New Password"
+                    required
                   />
-                  <Button type="submit" gradientDuoTone="purpleToBlue" disabled={loading}>
-                    {loading ? 'Updating...' : 'Update Password'}
-                  </Button>
+                  <div className="flex justify-end">
+                    <button 
+                      type="submit" 
+                      disabled={loading}
+                      className={`px-4 py-2 rounded-lg font-medium mt-4 transition-colors ${updateButtonClass} disabled:opacity-50`}
+                    >
+                      {loading ? (
+                        <>
+                          <Spinner size="sm" className="mr-2" />
+                          Updating...
+                        </>
+                      ) : 'Update Password'}
+                    </button>
+                  </div>
                 </form>
                 
                 <div className="mt-8 border-t pt-6">
@@ -288,7 +449,7 @@ export default function AdminProfile() {
                     disabled={loading}
                     className="w-full"
                   >
-                    {loading ? 'Deleting...' : 'Delete Account'}
+                    {loading ? 'Processing...' : 'Delete Account'}
                   </Button>
                 </div>
               </Card>
@@ -304,45 +465,45 @@ export default function AdminProfile() {
               }}
             >
               <Card>
-                <h2 className="text-2xl font-bold text-gray-800 mb-6">Site Overview</h2>
+                <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-6">Site Overview</h2>
                 
                 {isLoading ? (
                   <div className="text-center py-8">
                     <Spinner size="xl" />
-                    <p className="mt-2 text-gray-600">Loading statistics...</p>
+                    <p className="mt-2 text-gray-600 dark:text-gray-400">Loading statistics...</p>
                   </div>
                 ) : (
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                     {/* User Stats Card */}
-                    <div className="bg-white rounded-lg shadow p-6 border border-gray-200">
+                    <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 border border-gray-200 dark:border-gray-700">
                       <div className="flex flex-col items-center">
-                        <div className="h-14 w-14 rounded-full bg-blue-100 flex items-center justify-center mb-4">
-                          <HiUser className="h-8 w-8 text-blue-600" />
+                        <div className="h-14 w-14 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center mb-4">
+                          <HiUser className="h-8 w-8 text-blue-600 dark:text-blue-300" />
                         </div>
-                        <h3 className="text-3xl font-bold text-gray-800">{siteStats.totalUsers}</h3>
-                        <p className="text-gray-600">Registered Users</p>
+                        <h3 className="text-3xl font-bold text-gray-800 dark:text-white">{siteStats.totalUsers}</h3>
+                        <p className="text-gray-600 dark:text-gray-400">Registered Users</p>
                       </div>
                     </div>
                     
                     {/* Posts Stats Card */}
-                    <div className="bg-white rounded-lg shadow p-6 border border-gray-200">
+                    <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 border border-gray-200 dark:border-gray-700">
                       <div className="flex flex-col items-center">
-                        <div className="h-14 w-14 rounded-full bg-green-100 flex items-center justify-center mb-4">
-                          <HiOutlineChartPie className="h-8 w-8 text-green-600" />
+                        <div className="h-14 w-14 rounded-full bg-green-100 dark:bg-green-900 flex items-center justify-center mb-4">
+                          <HiOutlineChartPie className="h-8 w-8 text-green-600 dark:text-green-300" />
                         </div>
-                        <h3 className="text-3xl font-bold text-gray-800">{siteStats.totalPosts}</h3>
-                        <p className="text-gray-600">Posts Created</p>
+                        <h3 className="text-3xl font-bold text-gray-800 dark:text-white">{siteStats.totalPosts}</h3>
+                        <p className="text-gray-600 dark:text-gray-400">Posts Created</p>
                       </div>
                     </div>
                     
                     {/* Courses Stats Card */}
-                    <div className="bg-white rounded-lg shadow p-6 border border-gray-200">
+                    <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 border border-gray-200 dark:border-gray-700">
                       <div className="flex flex-col items-center">
-                        <div className="h-14 w-14 rounded-full bg-purple-100 flex items-center justify-center mb-4">
-                          <HiOutlineCog className="h-8 w-8 text-purple-600" />
+                        <div className="h-14 w-14 rounded-full bg-purple-100 dark:bg-purple-900 flex items-center justify-center mb-4">
+                          <HiOutlineCog className="h-8 w-8 text-purple-600 dark:text-purple-300" />
                         </div>
-                        <h3 className="text-3xl font-bold text-gray-800">{siteStats.totalCourses}</h3>
-                        <p className="text-gray-600">Courses Published</p>
+                        <h3 className="text-3xl font-bold text-gray-800 dark:text-white">{siteStats.totalCourses}</h3>
+                        <p className="text-gray-600 dark:text-gray-400">Courses Published</p>
                       </div>
                     </div>
                   </div>
@@ -350,15 +511,21 @@ export default function AdminProfile() {
                 
                 <div className="mt-8">
                   <div className="flex justify-between items-center mb-4">
-                    <h3 className="text-lg font-semibold">Quick Actions</h3>
+                    <h3 className="text-lg font-semibold dark:text-white">Quick Actions</h3>
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <Button color="blue" onClick={() => navigate('/admin-dashboard')}>
+                    <button
+                      onClick={() => navigate('/admin-dashboard')} 
+                      className={`px-4 py-2 rounded-lg font-medium transition-colors ${updateButtonClass}`}
+                    >
                       Open Admin Dashboard
-                    </Button>
-                    <Button color="purple" onClick={() => navigate('/addlearn')}>
+                    </button>
+                    <button 
+                      onClick={() => navigate('/addlearn')}
+                      className={`px-4 py-2 rounded-lg font-medium transition-colors ${updateButtonClass}`}
+                    >
                       Create New Course
-                    </Button>
+                    </button>
                   </div>
                 </div>
               </Card>
@@ -373,13 +540,18 @@ export default function AdminProfile() {
       <Modal show={showDeleteModal} onClose={() => setShowDeleteModal(false)}>
         <ModalHeader>Delete Account</ModalHeader>
         <ModalBody>
-          <p className="text-gray-700">
+          <p className="text-gray-700 dark:text-gray-300">
             Are you sure you want to delete your admin account? This action cannot be undone.
           </p>
         </ModalBody>
         <ModalFooter>
           <Button color="failure" onClick={handleDelete}>
-            Confirm
+            {loading ? (
+              <>
+                <Spinner size="sm" className="mr-2" />
+                Processing...
+              </>
+            ) : 'Confirm Delete'}
           </Button>
           <Button outline onClick={() => setShowDeleteModal(false)}>
             Cancel

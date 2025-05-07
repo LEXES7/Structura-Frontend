@@ -115,68 +115,71 @@ export default function ShowUsers({ searchTerm = '' }) {
         <h2 className="text-xl font-semibold">User Management ({filteredUsers.length})</h2>
       </div>
       
+      {/* Container with fixed height for scrollable table */}
       <div className="overflow-x-auto relative shadow-md sm:rounded-lg">
-        <table className="w-full text-sm text-left text-gray-500 dark:text-gray-400">
-          <thead className="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
-            <tr>
-              <th scope="col" className="px-6 py-3">User</th>
-              <th scope="col" className="px-6 py-3">Email</th>
-              <th scope="col" className="px-6 py-3">Role</th>
-              <th scope="col" className="px-6 py-3">Registration Date</th>
-              <th scope="col" className="px-6 py-3">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filteredUsers.length > 0 ? (
-              filteredUsers.map((user) => (
-                <tr key={user.id} className={`bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 ${
-                  user.isAdmin ? 'bg-blue-50 dark:bg-blue-900' : ''
-                }`}>
-                  <td className="px-6 py-4 whitespace-nowrap font-medium text-gray-900 dark:text-white">
-                    <div className="flex items-center space-x-3">
-                      <Avatar 
-                        img={user.profilePicture || "https://cdn.pixabay.com/photo/2019/08/11/18/59/icon-4399701_640.png"}
-                        rounded
-                        size="sm"
-                      />
-                      <span>{user.username}</span>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4">{user.email}</td>
-                  <td className="px-6 py-4">
-                    <Badge color={user.isAdmin ? "success" : "info"} className="px-2 py-1">
-                      {user.isAdmin ? "Admin" : "User"}
-                    </Badge>
-                  </td>
-                  <td className="px-6 py-4">
-                    {user.createdAt ? new Date(user.createdAt).toLocaleDateString() : 'N/A'}
-                  </td>
-                  <td className="px-6 py-4">
-                    <div className="flex items-center space-x-2">
-                      <Button size="xs" color="info" className="flex items-center" onClick={() => handleViewUser(user.id)}>
-                        <HiEye className="mr-1" /> View
-                      </Button>
-                      <Button size="xs" color="warning" className="flex items-center" onClick={() => navigate(`/admin-dashboard/edit-user/${user.id}`)}>
-                        <HiPencil className="mr-1" /> Edit
-                      </Button>
-                      {user.id !== currentUser.id && (
-                        <Button size="xs" color="failure" className="flex items-center" onClick={() => handleDeleteUser(user)}>
-                          <HiTrash className="mr-1" /> Delete
+        <div className="max-h-[70vh] overflow-y-auto">
+          <table className="w-full text-sm text-left text-gray-500 dark:text-gray-400">
+            <thead className="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400 sticky top-0 z-10">
+              <tr>
+                <th scope="col" className="px-6 py-3">User</th>
+                <th scope="col" className="px-6 py-3">Email</th>
+                <th scope="col" className="px-6 py-3">Role</th>
+                <th scope="col" className="px-6 py-3">Registration Date</th>
+                <th scope="col" className="px-6 py-3">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredUsers.length > 0 ? (
+                filteredUsers.map((user) => (
+                  <tr key={user.id} className={`bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 ${
+                    user.isAdmin ? 'bg-blue-50 dark:bg-blue-900' : ''
+                  }`}>
+                    <td className="px-6 py-4 whitespace-nowrap font-medium text-gray-900 dark:text-white">
+                      <div className="flex items-center space-x-3">
+                        <Avatar 
+                          img={user.profilePicture || "https://cdn.pixabay.com/photo/2019/08/11/18/59/icon-4399701_640.png"}
+                          rounded
+                          size="sm"
+                        />
+                        <span>{user.username}</span>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4">{user.email}</td>
+                    <td className="px-6 py-4">
+                      <Badge color={user.isAdmin ? "success" : "info"} className="px-2 py-1">
+                        {user.isAdmin ? "Admin" : "User"}
+                      </Badge>
+                    </td>
+                    <td className="px-6 py-4">
+                      {user.createdAt ? new Date(user.createdAt).toLocaleDateString() : 'N/A'}
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="flex items-center space-x-2">
+                        <Button size="xs" color="info" className="flex items-center" onClick={() => handleViewUser(user.id)}>
+                          <HiEye className="mr-1" /> View
                         </Button>
-                      )}
-                    </div>
+                        <Button size="xs" color="warning" className="flex items-center" onClick={() => navigate(`/admin-dashboard/edit-user/${user.id}`)}>
+                          <HiPencil className="mr-1" /> Edit
+                        </Button>
+                        {user.id !== currentUser.id && (
+                          <Button size="xs" color="failure" className="flex items-center" onClick={() => handleDeleteUser(user)}>
+                            <HiTrash className="mr-1" /> Delete
+                          </Button>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan={5} className="text-center py-4">
+                    {searchTerm ? "No users match your search criteria" : "No users found in the database"}
                   </td>
                 </tr>
-              ))
-            ) : (
-              <tr>
-                <td colSpan={5} className="text-center py-4">
-                  {searchTerm ? "No users match your search criteria" : "No users found in the database"}
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
 
       {/* Delete Confirmation Modal */}

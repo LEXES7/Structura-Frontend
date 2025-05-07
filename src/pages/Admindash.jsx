@@ -2,11 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { useSelector } from 'react-redux';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { TextInput, Spinner } from 'flowbite-react';
-import { HiUsers, HiAcademicCap, HiDocumentText, HiSearch } from 'react-icons/hi';
+import { HiUsers, HiAcademicCap, HiDocumentText, HiSearch, HiStar } from 'react-icons/hi';
 import DashSidebar from '../components/DashSidebar';
 import ShowUsers from '../components/admin/showusers';
 import ShowPosts from '../components/admin/showposts';
-import ShowLearn from '../components/admin/showlearn';
+import DisplayCourses from '../components/DisplayCourses/DisplayCourses';
+import AdminReview from '../components/admin/adminreview';
 
 export default function Admindash() {
   const { currentUser } = useSelector((state) => state.user);
@@ -22,18 +23,28 @@ export default function Admindash() {
       return;
     }
 
-    // Handle tab selection from navigation state
-    if (location.state?.activeTab) {
+    // Priority for URL parameters, then state, default to 'users'
+    const params = new URLSearchParams(location.search);
+    const tabFromUrl = params.get('tab');
+    
+    if (tabFromUrl && ['users', 'courses', 'posts', 'reviews'].includes(tabFromUrl)) {
+      setActiveTab(tabFromUrl);
+    } else if (location.state?.activeTab) {
       setActiveTab(location.state.activeTab);
-    } else if (location.search) {
-      // Also support URL parameters for direct links
-      const params = new URLSearchParams(location.search);
-      const tab = params.get('tab');
-      if (tab && ['users', 'courses', 'posts'].includes(tab)) {
-        setActiveTab(tab);
-      }
+      // Update URL to match state for consistency
+      navigate(`/admin-dashboard?tab=${location.state.activeTab}`, { replace: true });
+    } else {
+      // Default tab
+      setActiveTab('users');
+      navigate('/admin-dashboard?tab=users', { replace: true });
     }
   }, [currentUser, navigate, location]);
+
+  // Helper function to change tabs and update URL
+  const switchTab = (tab) => {
+    setActiveTab(tab);
+    navigate(`/admin-dashboard?tab=${tab}`, { state: { activeTab: tab }, replace: true });
+  };
 
   // If we have no current user, show a login prompt
   if (!currentUser) {
@@ -73,39 +84,36 @@ export default function Admindash() {
         <div className="flex border-b mb-4">
           <button
             className={`px-4 py-2 ${activeTab === 'users' ? 'border-b-2 border-blue-600 text-blue-600' : ''}`}
-            onClick={() => {
-              setActiveTab('users');
-              // Update URL state for bookmarking
-              navigate('/admin-dashboard', { state: { activeTab: 'users' }, replace: true });
-            }}
+            onClick={() => switchTab('users')}
           >
             <HiUsers className="inline mr-2" /> Users
           </button>
           <button
             className={`px-4 py-2 ${activeTab === 'courses' ? 'border-b-2 border-blue-600 text-blue-600' : ''}`}
-            onClick={() => {
-              setActiveTab('courses');
-              navigate('/admin-dashboard', { state: { activeTab: 'courses' }, replace: true });
-            }}
+            onClick={() => switchTab('courses')}
           >
             <HiAcademicCap className="inline mr-2" /> Courses
           </button>
           <button
             className={`px-4 py-2 ${activeTab === 'posts' ? 'border-b-2 border-blue-600 text-blue-600' : ''}`}
-            onClick={() => {
-              setActiveTab('posts');
-              navigate('/admin-dashboard', { state: { activeTab: 'posts' }, replace: true });
-            }}
+            onClick={() => switchTab('posts')}
           >
             <HiDocumentText className="inline mr-2" /> Posts
+          </button>
+          <button
+            className={`px-4 py-2 ${activeTab === 'reviews' ? 'border-b-2 border-blue-600 text-blue-600' : ''}`}
+            onClick={() => switchTab('reviews')}
+          >
+            <HiStar className="inline mr-2" /> Reviews
           </button>
         </div>
 
         {/* Content Area */}
         <div className="bg-white rounded-lg shadow">
           {activeTab === 'users' && <ShowUsers searchTerm={searchTerm} />}
-          {activeTab === 'courses' && <ShowLearn searchTerm={searchTerm} />}
+          {activeTab === 'courses' && <DisplayCourses isDashboard={true} />}
           {activeTab === 'posts' && <ShowPosts searchTerm={searchTerm} />}
+          {activeTab === 'reviews' && <AdminReview searchTerm={searchTerm} />}
         </div>
       </div>
     </div>
