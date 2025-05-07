@@ -1,29 +1,7 @@
-import React, { useState, useEffect, Component } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useSelector } from 'react-redux';
-import { Button, Label, TextInput, Textarea, Table } from 'flowbite-react';
+import { Button, Label, TextInput, Textarea, Dropdown } from 'flowbite-react';
 import axios from 'axios';
-
-// Error Boundary to catch rendering errors
-class ErrorBoundary extends Component {
-  state = { hasError: false, error: null };
-
-  static getDerivedStateFromError(error) {
-    return { hasError: true, error };
-  }
-
-  render() {
-    if (this.state.hasError) {
-      return (
-        <div className="p-4 text-red-500">
-          <h2>Something went wrong!</h2>
-          <p>{this.state.error?.message || 'Unknown error'}</p>
-          <p>Please check the console for details and contact support.</p>
-        </div>
-      );
-    }
-    return this.props.children;
-  }
-}
 
 const AddEventForm = ({ selectedDate, eventData, onEventChange }) => {
   const [formData, setFormData] = useState({
@@ -286,23 +264,46 @@ const AddEventForm = ({ selectedDate, eventData, onEventChange }) => {
 };
 
 const EventCalendar = () => {
-  console.log('EventCalendar component initialized');
   const [events, setEvents] = useState([]);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(true);
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [selectedDate, setSelectedDate] = useState(null);
-  const [reminders, setReminders] = useState([]);
+  const [countdowns, setCountdowns] = useState({});
 
   const { currentUser } = useSelector((state) => state.user || {});
   const token = currentUser?.token;
 
-  console.log('Current User:', { currentUser, token });
-
   useEffect(() => {
     fetchUpcomingEvents();
   }, [currentMonth, token]);
+
+  useEffect(() => {
+    const updateCountdowns = () => {
+      const newCountdowns = {};
+      events.forEach(event => {
+        if (event.startTime) {
+          const now = new Date();
+          const eventDate = new Date(event.startTime);
+          const diffMs = eventDate - now;
+          if (diffMs > 0) {
+            const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+            const diffHours = Math.floor((diffMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const diffMinutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+            const diffSeconds = Math.floor((diffMs % (1000 * 60)) / 1000);
+            newCountdowns[event.startTime] = `${diffDays}d ${diffHours}h ${diffMinutes}m ${diffSeconds}s`;
+          } else {
+            newCountdowns[event.startTime] = 'Event has started';
+          }
+        }
+      });
+      setCountdowns(newCountdowns);
+    };
+    updateCountdowns();
+    const interval = setInterval(updateCountdowns, 1000);
+    return () => clearInterval(interval);
+  }, [events]);
 
   const fetchUpcomingEvents = async () => {
     try {
@@ -325,11 +326,10 @@ const EventCalendar = () => {
 
       const data = await response.json();
       console.log('Fetched Events:', data);
-      const validEvents = Array.isArray(data) ? data.filter(event => event && typeof event === 'object') : [];
-      setEvents(validEvents);
+      const eventArray = Array.isArray(data) ? data : [];
+      setEvents(eventArray);
+      console.log('Set Events:', eventArray);
       setError(null);
-      checkReminders(validEvents);
-      console.log('Table Data Prepared:', validEvents);
     } catch (err) {
       console.error('Fetch Events Error:', err);
       const errorMessage = err.message || 'Failed to fetch events';
@@ -337,23 +337,6 @@ const EventCalendar = () => {
     } finally {
       setLoading(false);
     }
-  };
-
-  const checkReminders = (events) => {
-    const now = new Date();
-    const oneWeekFromNow = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
-    const upcomingEvents = events.filter((event) => {
-      try {
-        if (!event.startTime) return false;
-        const eventDate = new Date(event.startTime);
-        return eventDate >= now && eventDate <= oneWeekFromNow && !isNaN(eventDate);
-      } catch {
-        console.warn('Invalid event startTime:', event);
-        return false;
-      }
-    });
-    setReminders(upcomingEvents);
-    console.log('Reminders Checked:', upcomingEvents);
   };
 
   const getDaysInMonth = (date) => {
@@ -378,18 +361,12 @@ const EventCalendar = () => {
   const getEventsForDay = (day) => {
     if (!day) return [];
     return events.filter((event) => {
-      try {
-        if (!event.startTime) return false;
-        const eventDate = new Date(event.startTime);
-        return (
-          eventDate.getDate() === day.getDate() &&
-          eventDate.getMonth() === day.getMonth() &&
-          eventDate.getFullYear() === day.getFullYear()
-        );
-      } catch {
-        console.warn('Invalid event startTime in getEventsForDay:', event);
-        return false;
-      }
+      const eventDate = new Date(event.startTime);
+      return (
+        eventDate.getDate() === day.getDate() &&
+        eventDate.getMonth() === day.getMonth() &&
+        eventDate.getFullYear() === day.getFullYear()
+      );
     });
   };
 
@@ -400,15 +377,10 @@ const EventCalendar = () => {
 
   const formatEventTime = (dateString) => {
     if (!dateString) return '-';
-    try {
-      return new Date(dateString).toLocaleTimeString([], {
-        hour: '2-digit',
-        minute: '2-digit',
-      });
-    } catch {
-      console.warn('Invalid dateString:', dateString);
-      return '-';
-    }
+    return new Date(dateString).toLocaleTimeString([], {
+      hour: '2-digit',
+      minute: '2-digit',
+    });
   };
 
   const goToPreviousMonth = () => {
@@ -431,21 +403,6 @@ const EventCalendar = () => {
     console.log('Date Click:', { day, dayEvents, selectedEvent });
   };
 
-  const handleEditEvent = (event) => {
-    setSelectedEvent(event);
-    try {
-      if (event.startTime) {
-        setSelectedDate(new Date(event.startTime));
-      } else {
-        setSelectedDate(null);
-      }
-    } catch {
-      console.warn('Invalid startTime for edit:', event);
-      setSelectedDate(null);
-    }
-    console.log('Edit Event Clicked:', event);
-  };
-
   const days = getDaysInMonth(currentMonth);
   const monthName = currentMonth.toLocaleString('default', { month: 'long', year: 'numeric' });
   const isToday = (day) => {
@@ -458,207 +415,237 @@ const EventCalendar = () => {
     );
   };
 
+  const getNearEvents = () => {
+    const now = new Date();
+    const oneWeekFromNow = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+    const nearEvents = events
+      .filter(event => {
+        if (!event.startTime) return false;
+        const eventDate = new Date(event.startTime);
+        return eventDate >= now && eventDate <= oneWeekFromNow && !isNaN(eventDate);
+      })
+      .sort((a, b) => new Date(a.startTime) - new Date(b.startTime));
+    console.log('Near Events:', nearEvents);
+    return nearEvents;
+  };
+
+  const requestNotificationPermission = () => {
+    if ('Notification' in window) {
+      Notification.requestPermission().then(permission => {
+        if (permission === 'granted') {
+          console.log('Notification permission granted.');
+          getNearEvents().forEach(event => {
+            new Notification(`Upcoming Event: ${event.title}`, {
+              body: `Starts on ${new Date(event.startTime).toLocaleString()}`,
+              tag: 'event-reminder'
+            });
+          });
+        }
+      });
+    }
+  };
+
+  const generateReport = () => {
+    const headers = ['Title', 'Description', 'Start Time', 'End Time', 'Zoom Link', 'Category'];
+    const csvContent = [
+      headers.join(','),
+      ...events.map(event => 
+        [
+          `"${event.title || 'Untitled'}"`,
+          `"${event.description || ''}"`,
+          `"${event.startTime ? new Date(event.startTime).toLocaleString() : '-'}"`,
+          `"${event.endTime ? new Date(event.endTime).toLocaleString() : '-'}"`,
+          `"${event.zoomLink || ''}"`,
+          `"${event.category || ''}"`
+        ].join(',')
+      )
+    ].join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', 'events_report.csv');
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   return (
-    <ErrorBoundary>
-      <div className="max-w-4xl mx-auto p-4 bg-white shadow-md rounded-lg">
-        {/* Calendar Section */}
-        <div className="mb-8">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-2xl font-bold text-gray-800">{monthName}</h2>
+    <div className="max-w-4xl mx-auto p-4 bg-white shadow-md rounded-lg">
+      {/* Notification Dropdown */}
+      {currentUser && (
+        <div className="mb-6 flex justify-end">
+          <Dropdown label="Upcoming Events (Next 7 Days)" inline>
+            <Dropdown.Header>
+              <span className="block text-sm font-semibold">Events within 7 Days</span>
+            </Dropdown.Header>
+            {getNearEvents().length > 0 ? (
+              getNearEvents().map((event, index) => (
+                <Dropdown.Item key={index} onClick={() => setSelectedEvent(event)}>
+                  <div className="flex flex-col">
+                    <strong className="text-gray-800">{event.title || 'Untitled'}</strong>
+                    <span className="text-sm text-gray-600">
+                      Start: {event.startTime ? new Date(event.startTime).toLocaleString() : '-'}
+                    </span>
+                  </div>
+                </Dropdown.Item>
+              ))
+            ) : (
+              <Dropdown.Item>No upcoming events within 7 days.</Dropdown.Item>
+            )}
+            <Dropdown.Divider />
+            <Dropdown.Item onClick={requestNotificationPermission}>
+              Enable Notifications
+            </Dropdown.Item>
+          </Dropdown>
+        </div>
+      )}
+
+      {/* Calendar Section */}
+      <div className="mb-8">
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-2xl font-bold text-gray-800">{monthName}</h2>
+        </div>
+        {error && <p className="text-red-500 mb-4">{error}</p>}
+
+        {loading ? (
+          <div className="text-center py-8">
+            <div className="inline-block animate-spin rounded-full h-8 w-8 border-4 border-blue-500 border-t-transparent"></div>
+            <p className="mt-2 text-gray-600">Loading calendar...</p>
           </div>
-          {error && <p className="text-red-500 mb-4">{error}</p>}
-
-          {loading ? (
-            <div className="text-center py-8">
-              <div className="inline-block animate-spin rounded-full h-8 w-8 border-4 border-blue-500 border-t-transparent"></div>
-              <p className="mt-2 text-gray-600">Loading calendar...</p>
-            </div>
-          ) : (
-            <>
-              <div className="grid grid-cols-7 gap-2 text-center">
-                {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day) => (
-                  <div key={day} className="font-semibold text-gray-700 py-2">
-                    {day}
-                  </div>
-                ))}
-                {days.map((day, index) => (
-                  <div
-                    key={index}
-                    onClick={() => handleDayClick(day)}
-                    className={`p-2 h-20 border rounded-lg cursor-pointer transition-colors duration-200 ${
-                      !day
-                        ? 'bg-transparent'
-                        : isToday(day)
-                        ? 'bg-yellow-100 hover:bg-yellow-200'
-                        : hasEvent(day)
-                        ? 'bg-blue-100 hover:bg-blue-200'
-                        : 'bg-gray-50 hover:bg-gray-100'
-                    }`}
-                  >
-                    {day && (
-                      <>
-                        <div className="flex justify-between items-center">
-                          <span className={`text-sm font-medium ${isToday(day) ? 'text-blue-700' : ''}`}>
-                            {day.getDate()}
-                          </span>
-                          {hasEvent(day) && (
-                            <span className="w-2 h-2 bg-blue-500 rounded-full"></span>
-                          )}
-                        </div>
-                        <div className="mt-1 overflow-hidden max-h-12">
-                          {getEventsForDay(day).slice(0, 2).map((event, idx) => (
-                            <div
-                              key={idx}
-                              className="text-xs truncate text-blue-800 bg-blue-50 px-1 py-0.5 mb-0.5 rounded"
-                            >
-                              {formatEventTime(event.startTime)} {event.title || 'Untitled'}
-                            </div>
-                          ))}
-                          {getEventsForDay(day).length > 2 && (
-                            <div className="text-xs text-gray-500">
-                              +{getEventsForDay(day).length - 2} more
-                            </div>
-                          )}
-                        </div>
-                      </>
-                    )}
-                  </div>
-                ))}
-              </div>
-
-              <div className="mt-4 flex justify-between">
-                <button
-                  onClick={goToPreviousMonth}
-                  className="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300 transition-colors"
-                >
-                  Previous
-                </button>
-                <button
-                  onClick={() => setCurrentMonth(new Date())}
-                  className="px-4 py-2 bg-blue-100 rounded hover:bg-blue-200 transition-colors"
-                >
-                  Today
-                </button>
-                <button
-                  onClick={goToNextMonth}
-                  className="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300 transition-colors"
-                >
-                  Next
-                </button>
-              </div>
-            </>
-          )}
-        </div>
-
-        {/* Form Section */}
-        <div className="mt-8">
-          {currentUser ? (
-            <AddEventForm
-              selectedDate={selectedDate}
-              eventData={selectedEvent}
-              onEventChange={() => {
-                fetchUpcomingEvents();
-              }}
-            />
-          ) : (
-            <p className="text-gray-600 text-center">
-              Please log in to add or edit events.
-            </p>
-          )}
-        </div>
-
-        {/* Reminders Section */}
-        {currentUser && (
-          <ErrorBoundary>
-            <div className="mt-8">
-              <h2 className="text-2xl font-bold mb-4 text-gray-800">Upcoming Reminders</h2>
-              {reminders.length > 0 ? (
-                <div className="bg-yellow-100 border-l-4 border-yellow-500 p-4 rounded-lg">
-                  <ul className="list-disc pl-5 text-yellow-800">
-                    {reminders.map((event, idx) => (
-                      <li key={event.id || `reminder-${idx}`}>
-                        <strong>{event.title || 'Untitled'}</strong> on{' '}
-                        {event.startTime ? new Date(event.startTime).toLocaleString() : '-'}
-                      </li>
-                    ))}
-                  </ul>
+        ) : (
+          <>
+            <div className="grid grid-cols-7 gap-2 text-center">
+              {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day) => (
+                <div key={day} className="font-semibold text-gray-700 py-2">
+                  {day}
                 </div>
-              ) : (
-                <p className="text-gray-600">No events scheduled within the next week.</p>
-              )}
-            </div>
-          </ErrorBoundary>
-        )}
-
-        {/* Table Section */}
-        {currentUser && (
-          <ErrorBoundary>
-            <div className="mt-8">
-              <h2 className="text-2xl font-bold mb-4 text-gray-800">All Events</h2>
-              {events.length > 0 ? (
-                <div className="overflow-x-auto">
-                  <Table hoverable className="min-w-full">
-                    <Table.Head>
-                      <Table.HeadCell>Title</Table.HeadCell>
-                      <Table.HeadCell>Start Time</Table.HeadCell>
-                      <Table.HeadCell>End Time</Table.HeadCell>
-                      <Table.HeadCell>Category</Table.HeadCell>
-                      <Table.HeadCell>Zoom Link</Table.HeadCell>
-                      <Table.HeadCell>Description</Table.HeadCell>
-                      <Table.HeadCell>Actions</Table.HeadCell>
-                    </Table.Head>
-                    <Table.Body className="divide-y">
-                      {events.map((event, idx) => (
-                        <Table.Row key={event.id || `event-${idx}`} className="bg-white">
-                          <Table.Cell className="whitespace-nowrap font-medium text-gray-900">
-                            {event.title || 'Untitled'}
-                          </Table.Cell>
-                          <Table.Cell>
-                            {event.startTime ? new Date(event.startTime).toLocaleString() : '-'}
-                          </Table.Cell>
-                          <Table.Cell>
-                            {event.endTime ? new Date(event.endTime).toLocaleString() : '-'}
-                          </Table.Cell>
-                          <Table.Cell>{event.category || '-'}</Table.Cell>
-                          <Table.Cell>
-                            {event.zoomLink ? (
-                              <a
-                                href={event.zoomLink}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-blue-600 hover:underline"
-                              >
-                                Join
-                              </a>
-                            ) : (
-                              '-'
-                            )}
-                          </Table.Cell>
-                          <Table.Cell className="truncate max-w-xs">
-                            {event.description || '-'}
-                          </Table.Cell>
-                          <Table.Cell>
-                            <Button
-                              size="xs"
-                              color="blue"
-                              onClick={() => handleEditEvent(event)}
-                            >
-                              Edit
-                            </Button>
-                          </Table.Cell>
-                        </Table.Row>
-                      ))}
-                    </Table.Body>
-                  </Table>
+              ))}
+              {days.map((day, index) => (
+                <div
+                  key={index}
+                  onClick={() => handleDayClick(day)}
+                  className={`p-2 h-20 border rounded-lg cursor-pointer transition-colors duration-200 ${
+                    !day
+                      ? 'bg-transparent'
+                      : isToday(day)
+                      ? 'bg-yellow-100 hover:bg-yellow-200'
+                      : hasEvent(day)
+                      ? 'bg-blue-100 hover:bg-blue-200'
+                      : 'bg-gray-50 hover:bg-gray-100'
+                  }`}
+                >
+                  {day && (
+                    <>
+                      <div className="flex justify-between items-center">
+                        <span className={`text-sm font-medium ${isToday(day) ? 'text-blue-700' : ''}`}>
+                          {day.getDate()}
+                        </span>
+                        {hasEvent(day) && (
+                          <span className="w-2 h-2 bg-blue-500 rounded-full"></span>
+                        )}
+                      </div>
+                      <div className="mt-1 overflow-hidden max-h-12">
+                        {getEventsForDay(day).slice(0, 2).map((event, idx) => (
+                          <div
+                            key={idx}
+                            className="text-xs truncate text-blue-800 bg-blue-50 px-1 py-0.5 mb-0.5 rounded"
+                          >
+                            {formatEventTime(event.startTime)} {event.title}
+                          </div>
+                        ))}
+                        {getEventsForDay(day).length > 2 && (
+                          <div className="text-xs text-gray-500">
+                            +{getEventsForDay(day).length - 2} more
+                          </div>
+                        )}
+                      </div>
+                    </>
+                  )}
                 </div>
-              ) : (
-                <p className="text-gray-600">No events available.</p>
-              )}
+              ))}
             </div>
-          </ErrorBoundary>
+
+            <div className="mt-4 flex justify-between">
+              <button
+                onClick={goToPreviousMonth}
+                className="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300 transition-colors"
+              >
+                Previous
+              </button>
+              <button
+                onClick={() => setCurrentMonth(new Date())}
+                className="px-4 py-2 bg-blue-100 rounded hover:bg-blue-200 transition-colors"
+              >
+                Today
+              </button>
+              <button
+                onClick={goToNextMonth}
+                className="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300 transition-colors"
+              >
+                Next
+              </button>
+            </div>
+          </>
         )}
       </div>
-    </ErrorBoundary>
+
+      {/* Form Section */}
+      <div className="mt-8">
+        {currentUser ? (
+          <AddEventForm
+            selectedDate={selectedDate}
+            eventData={selectedEvent}
+            onEventChange={fetchUpcomingEvents}
+          />
+        ) : (
+          <p className="text-gray-600 text-center">
+            Please log in to add or edit events.
+          </p>
+        )}
+      </div>
+
+      {/* All Events Section */}
+      {currentUser && (
+        <div className="mt-8">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-2xl font-bold text-gray-800">Schedule</h2>
+            <Button color="blue" onClick={generateReport}>
+              Generate Report
+            </Button>
+          </div>
+          <div className="mb-4">
+            <TextInput
+              type="text"
+              placeholder="Search events by title..."
+              onChange={(e) => {
+                const searchTerm = e.target.value.toLowerCase();
+                setEvents(events.filter(event => 
+                  event.title?.toLowerCase().includes(searchTerm)
+                ));
+                if (searchTerm === '') fetchUpcomingEvents();
+              }}
+              className="w-full max-w-md"
+            />
+          </div>
+          {events.length > 0 ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {events.map((event, index) => (
+                <div key={index} className="p-4 bg-white border rounded-lg shadow-md hover:shadow-lg transition-shadow">
+                  <h3 className="text-lg font-semibold text-gray-800">{event.title || 'Untitled'}</h3>
+                  <p className="text-gray-600">{event.startTime ? new Date(event.startTime).toLocaleString() : '-'}</p>
+                  <p className="text-gray-500 mt-1">Countdown: {countdowns[event.startTime] || 'Calculating...'}</p>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-gray-600">No events available.</p>
+          )}
+        </div>
+      )}
+    </div>
   );
 };
 
