@@ -23,6 +23,7 @@ import PrivateRoute from './components/PrivateRoute';
 import AdminRoute from './components/AdminRoute';
 import PostPage from './pages/PostPage';
 import AboutUs from './pages/About';
+import AdminProfile from './pages/AdminProfile';
 
 export default function App() {
   return (
@@ -56,8 +57,10 @@ export default function App() {
           {/* Admin-only routes */}
           <Route element={<AdminRoute />}>
             <Route path="/admin-dashboard" element={<Admindash />} />
+            <Route path="/admin-profile" element={<AdminProfile />} />
             <Route path="/addlearn" element={<Addlearn />} />
             <Route path="/addcourse" element={<AddCourse />} />
+            <Route path="/editlearn/:learnId" element={<Addlearn />} />
           </Route>
           
           {/* 404 route */}
