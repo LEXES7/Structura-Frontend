@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { useSelector } from 'react-redux';
 import { Button, Textarea, Badge } from 'flowbite-react';
-import { HiCalendar } from 'react-icons/hi';
+import { HiCalendar, HiLockClosed } from 'react-icons/hi';
 import postLogo from '../assets/postlogo.png';
 
 const formatDate = (dateString) => {
@@ -50,43 +50,45 @@ export default function PostPage() {
     };
 
     useEffect(() => {
-        if (!currentUser) {
-            navigate('/signin');
-            return;
-        }
+        // Remove the redirect for non-authenticated users
+        // if (!currentUser) {
+        //    navigate('/signin');
+        //    return;
+        // }
 
         const fetchPostAndComments = async () => {
             try {
-                console.log(`Fetching post from ${BASE_URL}/api/posts/${postId} with token: ${currentUser.token ? 'present' : 'absent'}`);
-                const postResponse = await axios.get(`${BASE_URL}/api/posts/${postId}`, {
-                    headers: {
-                        Authorization: `Bearer ${currentUser.token}`,
-                    },
-                });
+                console.log(`Fetching post from ${BASE_URL}/api/posts/${postId}`);
+                // Make request without authentication headers for public access
+                const postResponse = await axios.get(`${BASE_URL}/api/posts/${postId}`);
                 console.log("Post fetched:", postResponse.data);
                 setPost(postResponse.data);
 
                 console.log(`Fetching comments from ${BASE_URL}/api/comments/post/${postId}`);
-                const commentsResponse = await axios.get(`${BASE_URL}/api/comments/post/${postId}`, {
-                    headers: {
-                        Authorization: `Bearer ${currentUser.token}`,
-                    },
-                });
+                // Make request without authentication headers for public access
+                const commentsResponse = await axios.get(`${BASE_URL}/api/comments/post/${postId}`);
                 console.log("Comments fetched:", commentsResponse.data);
                 setComments(commentsResponse.data);
                 setLoading(false);
             } catch (err) {
                 console.error('Error fetching data:', err);
-                setError(err.response?.data?.message || 'Failed to load data. Please check your connection or login status.');
+                setError(err.response?.data?.message || 'Failed to load data. Please check your connection.');
                 setLoading(false);
             }
         };
 
         fetchPostAndComments();
-    }, [postId, currentUser, navigate]);
+    }, [postId, navigate]);
 
     const handleCommentSubmit = async (e) => {
         e.preventDefault();
+        
+        // Check if user is authenticated
+        if (!currentUser) {
+            navigate('/signin?redirect=' + encodeURIComponent(`/post/${postId}`));
+            return;
+        }
+        
         if (!newComment.trim()) {
             setError('Comment content cannot be empty');
             return;
@@ -114,6 +116,11 @@ export default function PostPage() {
     };
 
     const handleEditComment = async (commentId) => {
+        if (!currentUser) {
+            navigate('/signin?redirect=' + encodeURIComponent(`/post/${postId}`));
+            return;
+        }
+        
         if (!editedContent.trim()) {
             setError('Comment content cannot be empty');
             return;
@@ -146,6 +153,11 @@ export default function PostPage() {
     };
 
     const handleDeleteComment = async (commentId) => {
+        if (!currentUser) {
+            navigate('/signin?redirect=' + encodeURIComponent(`/post/${postId}`));
+            return;
+        }
+        
         if (!window.confirm('Are you sure you want to delete this comment?')) return;
 
         try {
@@ -170,26 +182,20 @@ export default function PostPage() {
         const fetchPostAndComments = async () => {
             try {
                 console.log(`Retrying fetch post from ${BASE_URL}/api/posts/${postId}`);
-                const postResponse = await axios.get(`${BASE_URL}/api/posts/${postId}`, {
-                    headers: {
-                        Authorization: `Bearer ${currentUser.token}`,
-                    },
-                });
+                // Make request without authentication headers for public access
+                const postResponse = await axios.get(`${BASE_URL}/api/posts/${postId}`);
                 console.log("Post fetched on retry:", postResponse.data);
                 setPost(postResponse.data);
 
                 console.log(`Retrying fetch comments from ${BASE_URL}/api/comments/post/${postId}`);
-                const commentsResponse = await axios.get(`${BASE_URL}/api/comments/post/${postId}`, {
-                    headers: {
-                        Authorization: `Bearer ${currentUser.token}`,
-                    },
-                });
+                // Make request without authentication headers for public access
+                const commentsResponse = await axios.get(`${BASE_URL}/api/comments/post/${postId}`);
                 console.log("Comments fetched on retry:", commentsResponse.data);
                 setComments(commentsResponse.data);
                 setLoading(false);
             } catch (err) {
                 console.error('Error retrying fetch:', err);
-                setError(err.response?.data?.message || 'Failed to load data. Please check your connection or login status.');
+                setError(err.response?.data?.message || 'Failed to load data. Please check your connection.');
                 setLoading(false);
             }
         };
@@ -272,23 +278,39 @@ export default function PostPage() {
                     <h2 className="text-3xl font-bold text-white mb-6">Comments</h2>
 
                     <div className="mb-8">
-                        <Textarea
-                            className="w-full p-3 bg-gray-700 text-white border-gray-600 focus:border-blue-500 focus:ring-blue-500 rounded-lg"
-                            rows="4"
-                            placeholder="Write your comment..."
-                            value={newComment}
-                            onChange={(e) => setNewComment(e.target.value)}
-                        />
-                        {error === 'Comment content cannot be empty' && (
-                            <p className="text-red-400 text-sm mt-2">{error}</p>
+                        {currentUser ? (
+                            <>
+                                <Textarea
+                                    className="w-full p-3 bg-gray-700 text-white border-gray-600 focus:border-blue-500 focus:ring-blue-500 rounded-lg"
+                                    rows="4"
+                                    placeholder="Write your comment..."
+                                    value={newComment}
+                                    onChange={(e) => setNewComment(e.target.value)}
+                                />
+                                {error === 'Comment content cannot be empty' && (
+                                    <p className="text-red-400 text-sm mt-2">{error}</p>
+                                )}
+                                <Button
+                                    gradientDuoTone="purpleToBlue"
+                                    className="mt-3 rounded-full px-6 py-2"
+                                    onClick={handleCommentSubmit}
+                                >
+                                    Post Comment
+                                </Button>
+                            </>
+                        ) : (
+                            <div className="bg-gray-700 p-4 rounded-lg text-center border border-gray-600">
+                                <p className="flex items-center justify-center mb-3 text-gray-300">
+                                    <HiLockClosed className="mr-2" /> Sign in to comment on this post
+                                </p>
+                                <Button
+                                    gradientDuoTone="purpleToBlue"
+                                    onClick={() => navigate('/signin?redirect=' + encodeURIComponent(`/post/${postId}`))}
+                                >
+                                    Sign In
+                                </Button>
+                            </div>
                         )}
-                        <Button
-                            gradientDuoTone="purpleToBlue"
-                            className="mt-3 rounded-full px-6 py-2"
-                            onClick={handleCommentSubmit}
-                        >
-                            Post Comment
-                        </Button>
                     </div>
 
                     {comments.length === 0 ? (
@@ -307,7 +329,7 @@ export default function PostPage() {
                                                 {formatDate(comment.createdAt)}
                                             </p>
                                         </div>
-                                        {comment.userId === currentUser.id && (
+                                        {currentUser && comment.userId === currentUser.id && (
                                             <div className="flex space-x-3">
                                                 <Button
                                                     size="sm"

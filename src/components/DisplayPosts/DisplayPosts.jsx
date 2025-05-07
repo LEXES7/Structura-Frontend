@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import { Button, Label, TextInput, Textarea, Badge, Spinner } from 'flowbite-react';
 import { useSelector, useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
-import { HiCalendar, HiExclamation, HiTrash, HiPencil } from 'react-icons/hi';
+import { HiCalendar, HiExclamation, HiTrash, HiPencil, HiLogin } from 'react-icons/hi';
 import postLogo from '../../assets/postlogo.png';
 import { fetchUserPostsSuccess } from '../../redux/userSlice';
 
@@ -35,60 +35,66 @@ export default function DisplayPosts({ isDashboard = false }) {
     });
     const [newImage, setNewImage] = useState(null);
     const [selectedCategory, setSelectedCategory] = useState('All');
+    const [fetchDone, setFetchDone] = useState(false); // Track if fetch has been done
+    
     const { currentUser, userPosts } = useSelector((state) => state.user);
     const token = currentUser?.token;
     const navigate = useNavigate();
     const dispatch = useDispatch();
     const BASE_URL = 'http://localhost:8080';
 
-    useEffect(() => {
-        const fetchPosts = async () => {
-            if (isDashboard && !currentUser) {
-                setError("You must be logged in to view your posts");
-                setLoading(false);
-                return;
-            }
-
-            try {
-                const url = isDashboard ? `${BASE_URL}/api/posts/user` : `${BASE_URL}/api/posts`;
-                const config = isDashboard && token ? { headers: { Authorization: `Bearer ${token}` } } : {};
-                
-                console.log(`Fetching posts from ${url} with token: ${token ? 'present' : 'absent'}`);
-                const response = await axios.get(url, config);
-                
-                if (response.data && Array.isArray(response.data)) {
-                    console.log(`Fetched ${response.data.length} posts`);
-                    setPosts(response.data);
-                    
-                    // If in dashboard mode, update Redux store with user posts
-                    if (isDashboard) {
-                        dispatch(fetchUserPostsSuccess(response.data));
-                    }
-                } else {
-                    console.error("Invalid response format:", response.data);
-                    setError("Received invalid data format from server");
-                    setPosts([]);
-                }
-                setLoading(false);
-            } catch (err) {
-                console.error('Error fetching posts:', err);
-                setError(err.response?.data?.message || 'Failed to load posts. Please check your connection or login status.');
-                setLoading(false);
-            }
-        };
-        
-        // Use userPosts from Redux if available in dashboard mode
-        if (isDashboard && userPosts && userPosts.length > 0) {
-            setPosts(userPosts);
+    // Use useCallback to memoize the fetch function
+    const fetchPosts = useCallback(async () => {
+        if (isDashboard && !currentUser) {
+            setError("You must be logged in to view your posts");
             setLoading(false);
-        } else {
-            fetchPosts();
+            setFetchDone(true);
+            return;
         }
-    }, [isDashboard, token, currentUser, dispatch, userPosts]);
+
+        try {
+            const url = isDashboard ? `${BASE_URL}/api/posts/user` : `${BASE_URL}/api/posts`;
+            const config = isDashboard && token ? { headers: { Authorization: `Bearer ${token}` } } : {};
+            
+            const response = await axios.get(url, config);
+            
+            if (response.data && Array.isArray(response.data)) {
+                setPosts(response.data);
+                
+                // If in dashboard mode, update Redux store with user posts
+                if (isDashboard) {
+                    dispatch(fetchUserPostsSuccess(response.data));
+                }
+            } else {
+                setError("Received invalid data format from server");
+                setPosts([]);
+            }
+            setLoading(false);
+            setFetchDone(true);
+        } catch (err) {
+            setError(err.response?.data?.message || 'Failed to load posts. Please check your connection or login status.');
+            setLoading(false);
+            setFetchDone(true);
+        }
+    }, [isDashboard, token, currentUser, dispatch, BASE_URL]);
+
+    useEffect(() => {
+        // Only fetch if we haven't done it yet or if critical dependencies change
+        if (!fetchDone || isDashboard && userPosts && userPosts.length > 0) {
+            // If we have userPosts in redux and this is dashboard, use those instead of fetching
+            if (isDashboard && userPosts && userPosts.length > 0) {
+                setPosts(userPosts);
+                setLoading(false);
+                setFetchDone(true);
+            } else {
+                // Otherwise fetch posts
+                fetchPosts();
+            }
+        }
+    }, [fetchPosts, fetchDone, isDashboard, userPosts]);
 
     const handleEditClick = (post) => {
         const postId = post._id || post.id;
-        console.log("Editing post:", postId, post);
         setEditingPostId(postId);
         setEditFormData({
             postName: post.postName || '',
@@ -119,14 +125,12 @@ export default function DisplayPosts({ isDashboard = false }) {
         if (newImage) formData.append('file', newImage);
 
         try {
-            console.log("Updating post:", editingPostId);
             const response = await axios.put(`${BASE_URL}/api/posts/${editingPostId}`, formData, {
                 headers: {
                     'Content-Type': 'multipart/form-data',
                     Authorization: `Bearer ${token}`,
                 },
             });
-            console.log("Post updated:", response.data);
             
             // Update local state
             const updatedPosts = posts.map(post => ((post._id || post.id) === editingPostId ? response.data : post));
@@ -140,7 +144,6 @@ export default function DisplayPosts({ isDashboard = false }) {
             setEditingPostId(null);
             setNewImage(null);
         } catch (err) {
-            console.error('Error updating post:', err);
             setError(err.response?.data?.message || 'Failed to update post.');
         }
     };
@@ -157,7 +160,6 @@ export default function DisplayPosts({ isDashboard = false }) {
         }
         if (window.confirm('Are you sure you want to delete this post?')) {
             try {
-                console.log("Deleting post:", postId);
                 await axios.delete(`${BASE_URL}/api/posts/${postId}`, {
                     headers: { Authorization: `Bearer ${token}` },
                 });
@@ -172,14 +174,17 @@ export default function DisplayPosts({ isDashboard = false }) {
                 }
                 
             } catch (err) {
-                console.error('Error deleting post:', err);
                 setError(err.response?.data?.message || 'Failed to delete post.');
             }
         }
     };
 
     const handleAddPost = () => {
-        navigate('/addpost');
+        if (!currentUser) {
+            navigate('/signin?redirect=/addpost');
+        } else {
+            navigate('/addpost');
+        }
     };
 
     const handlePostClick = (postId) => {
@@ -188,6 +193,10 @@ export default function DisplayPosts({ isDashboard = false }) {
 
     const handleCategoryFilter = (category) => {
         setSelectedCategory(category);
+    };
+    
+    const handleSignInClick = () => {
+        navigate('/signin');
     };
 
     const getImageUrl = (imgPath) => {
@@ -242,15 +251,25 @@ export default function DisplayPosts({ isDashboard = false }) {
                     <h1 className={`text-3xl font-bold ${titleColor} mb-6`}>
                         {isDashboard ? 'Your Posts' : 'All Posts'}
                     </h1>
-                    {isDashboard && (
+                    <div className="flex gap-2">
+                        {!currentUser && !isDashboard && (
+                            <Button
+                                color="blue"
+                                onClick={handleSignInClick}
+                                className="rounded-full px-5 py-2 text-white flex items-center"
+                            >
+                                <HiLogin className="mr-2" /> Sign In
+                            </Button>
+                        )}
+                        
                         <Button
                             color="blue"
                             className="rounded-full px-6 py-2 shadow-lg text-white"
                             onClick={handleAddPost}
                         >
-                            Add Post
+                            {isDashboard ? 'Add Post' : 'Create Post'}
                         </Button>
-                    )}
+                    </div>
                 </div>
 
                 {/* Display message if no posts are available */}
@@ -274,15 +293,13 @@ export default function DisplayPosts({ isDashboard = false }) {
                         ) : (
                             <p className="text-gray-400 mb-6">There are no posts available at this time.</p>
                         )}
-                        {isDashboard && (
-                            <Button
-                                color="blue"
-                                onClick={handleAddPost}
-                                className="rounded-full px-6 py-2 text-white"
-                            >
-                                Create Your First Post
-                            </Button>
-                        )}
+                        <Button
+                            color="blue"
+                            onClick={handleAddPost}
+                            className="rounded-full px-6 py-2 text-white"
+                        >
+                            Create Your First Post
+                        </Button>
                     </div>
                 )}
 
@@ -409,7 +426,6 @@ export default function DisplayPosts({ isDashboard = false }) {
                                                 src={getImageUrl(post.postImg)}
                                                 alt={post.postName}
                                                 onError={(e) => {
-                                                    console.error("Image failed to load:", post.postImg);
                                                     e.target.src = postLogo;
                                                 }}
                                             />

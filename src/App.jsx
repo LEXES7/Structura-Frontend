@@ -43,13 +43,13 @@ export default function App() {
           <Route path="/oauth-callback" element={<OAuthCallback />} />
           <Route path="/post/:postId" element={<PostPage />} />
           <Route path="/home" element={<Home />} />
+          <Route path="/displaypost" element={<Displaypost />} /> {/* Moved from private routes */}
           
           {/* Private routes for all authenticated users */}
           <Route element={<PrivateRoute />}>
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/profile" element={<Profile />} />
             <Route path="/addpost" element={<Addpost />} />
-            <Route path="/displaypost" element={<Displaypost />} />
             <Route path="/displaylearn" element={<Displaylearn />} />
             <Route path="/displaycourse" element={<DisplayCourse />} />
           </Route>
