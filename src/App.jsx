@@ -5,18 +5,7 @@ import Addpost from './components/AddPost/Addpost';
 import Learn from './components/Learn/Learn';
 import Displaypost from './components/DisplayPosts/DisplayPosts';
 import FeaturesPage from './pages/FeaturesPage';
-
-
-
-
-
-
-
-
-
-
-
-
+import ReviewsHomePage from './components/ReviewsHomePage';
 import Addlearn from './components/AddLearn/Addlearn';
 import AddCourse from './components/AddCourse/AddCourse';
 import Course from './components/Course/Course';
@@ -27,19 +16,14 @@ import Signin from './pages/Signin';
 import Signup from './pages/Signup';
 import Profile from './pages/Profile';
 import Dashboard from './pages/Dashboard';
+import Admindash from './pages/Admindash';
 import OAuthCallback from './components/OAuthCallback';
 import Header from './components/Header';
-import PrivateRoute from './components/PrivateRoute'; // Updated PrivateRoute
+import PrivateRoute from './components/PrivateRoute'; 
+import AdminRoute from './components/AdminRoute';
 import PostPage from './pages/PostPage';
 import AboutUs from './pages/About';
-
-
-
-
-
-
-import EventCalendar from './components/DisplayEvents/EventCalendar'
-import AddEventForm from './components/Addevents/AddEventForm'
+import AdminProfile from './pages/AdminProfile';
 
 export default function App() {
   return (
@@ -47,54 +31,40 @@ export default function App() {
       <Header />
       <React.Fragment>
         <Routes>
+          {/* Public routes */}
           <Route path="/" element={<Home />} />
-          <Route path="/addpost" element={<Addpost />} />
-          <Route path="/course" element={<Course />} />
-          <Route path="/displaypost" element={<Displaypost />} />
           <Route path="/features" element={<FeaturesPage />} />
           <Route path="/about" element={<AboutUs />} />
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-          <Route path="/displaylearn" element={<Displaylearn />} />
-          <Route path="/displaycourse" element={<DisplayCourse />} />
-          <Route path="/addlearn" element={<Addlearn />} />
-          <Route path="/addcourse" element={<AddCourse />} />
+          <Route path="/reviews" element={<ReviewsHomePage />} />
           <Route path="/learn" element={<Learn />} />
+          <Route path="/course" element={<Course />} />
           <Route path="/signin" element={<Signin />} />
           <Route path="/signup" element={<Signup />} />
-          <Route path="/profile" element={<Profile />} />
-          {/* Private routes for users and admins */}
-          <Route element={<PrivateRoute />}>
-            <Route path="/dashboard" element={<Dashboard />} /> {/* User dashboard */}
-          </Route>
           <Route path="/oauth-callback" element={<OAuthCallback />} />
-          <Route path="/home" element={<Home />} />
-          <Route path="*" element={<div>Page Not Found</div>} />
           <Route path="/post/:postId" element={<PostPage />} />
-
-
-
-
-          <Route path="/ap" element={<AddEventForm />} />
-          <Route path="/eventc" element={<EventCalendar />} />
-
-
+          <Route path="/home" element={<Home />} />
+          <Route path="/displaypost" element={<Displaypost />} /> {/* Moved from private routes */}
           
+          {/* Private routes for all authenticated users */}
+          <Route element={<PrivateRoute />}>
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/profile" element={<Profile />} />
+            <Route path="/addpost" element={<Addpost />} />
+            <Route path="/displaylearn" element={<Displaylearn />} />
+            <Route path="/displaycourse" element={<DisplayCourse />} />
+          </Route>
+          
+          {/* Admin-only routes */}
+          <Route element={<AdminRoute />}>
+            <Route path="/admin-dashboard" element={<Admindash />} />
+            <Route path="/admin-profile" element={<AdminProfile />} />
+            <Route path="/addlearn" element={<Addlearn />} />
+            <Route path="/addcourse" element={<AddCourse />} />
+            <Route path="/editlearn/:learnId" element={<Addlearn />} />
+          </Route>
+          
+          {/* 404 route */}
+          <Route path="*" element={<div>Page Not Found</div>} />
         </Routes>
         <Footer />
       </React.Fragment>

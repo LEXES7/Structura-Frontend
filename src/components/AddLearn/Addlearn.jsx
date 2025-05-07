@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Button, Label, TextInput, Textarea, FileInput, Alert, Card } from 'flowbite-react';
+import { Button, Label, TextInput, Textarea, FileInput, Alert, Card, Select } from 'flowbite-react';
 import { HiInformationCircle, HiCheckCircle, HiBookOpen, HiTag, HiPencil } from 'react-icons/hi';
 import axios from 'axios';
 import { useSelector } from 'react-redux';
@@ -91,7 +91,7 @@ export default function AddLearn() {
     };
 
     return (
-        <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+        <div className="min-h-screen flex items-center justify-center p-4 bg-[url('src/assets/home.jpg')] bg-cover bg-center bg-no-repeat">
             <Card className="w-full max-w-lg mx-auto shadow-lg rounded-lg">
                 <div className="p-6">
                     <h2 className="text-2xl font-bold text-gray-800 mb-6 text-center">Add New Course</h2>
@@ -117,7 +117,7 @@ export default function AddLearn() {
                                 name="learnName"
                                 value={formData.learnName}
                                 onChange={handleChange}
-                                placeholder="e.g., Introduction to React"
+                                placeholder="Course Name"
                                 required
                                 icon={HiBookOpen}
                                 className="mt-1"
@@ -125,20 +125,24 @@ export default function AddLearn() {
                             />
                         </div>
 
-                        {/* Category */}
+                        {/* Category Dropdown */}
                         <div>
                             <Label htmlFor="learnCategory" value="Category" className="text-gray-700 font-medium" />
-                            <TextInput
+                            <Select
                                 id="learnCategory"
                                 name="learnCategory"
                                 value={formData.learnCategory}
                                 onChange={handleChange}
-                                placeholder="e.g., Technology"
                                 required
                                 icon={HiTag}
                                 className="mt-1"
                                 color={formData.learnCategory.trim() ? 'success' : 'gray'}
-                            />
+                            >
+                                <option value="" disabled>Select a Level</option>
+                                <option value="Beginner">Beginner Level</option>
+                                <option value="Intermediate">Intermediate Level</option>
+                                <option value="Advanced">Advanced Level</option>
+                            </Select>
                         </div>
 
                         {/* Description */}
@@ -149,7 +153,7 @@ export default function AddLearn() {
                                 name="learnDescription"
                                 value={formData.learnDescription}
                                 onChange={handleChange}
-                                placeholder="Describe your course..."
+                                placeholder="Describe your course"
                                 rows={4}
                                 required
                                 className="mt-1"
@@ -183,8 +187,8 @@ export default function AddLearn() {
 
                         {/* Submit Button */}
                         <Button type="submit" color="blue" className="w-full" disabled={loading}>
-                    {loading ? 'Adding...' : 'Add Post'}
-                </Button>
+                            {loading ? 'Adding...' : 'Add Course'}
+                        </Button>
                     </form>
                 </div>
             </Card>

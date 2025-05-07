@@ -4,12 +4,16 @@ import { Button } from 'flowbite-react';
 import { motion } from 'framer-motion';
 import homeImage from '../assets/home.jpg';
 import postLogo from '../assets/postlogo.png';
+import image1 from '../assets/s.jpeg';
+import image2 from '../assets/t.jpeg';
+import image3 from '../assets/k.png';
+import image4 from '../assets/n.jpeg';
 
 const teamMembers = [
-    { name: 'Team Member 1', role: 'Lead Developer', image: postLogo },
-    { name: 'Team Member 2', role: 'UI/UX Designer', image: postLogo },
-    { name: 'Team Member 3', role: 'Developer', image: postLogo },
-    { name: 'Team Member 4', role: 'Developer', image: postLogo },
+    { name: 'Team Member 1', role: 'Lead Developer', image: image1 },
+    { name: 'Team Member 2', role: 'UI/UX Designer', image: image2 },
+    { name: 'Team Member 3', role: 'Developer', image: image3 },
+    { name: 'Team Member 4', role: 'Developer', image: image4 },
 ];
 
 export default function AboutUs() {
@@ -85,14 +89,7 @@ export default function AboutUs() {
                     transition={{ duration: 0.8, delay: 0.6 }}
                     className="text-center"
                 >
-                    <Link to="/signup">
-                        <Button
-                            gradientDuoTone="purpleToBlue"
-                            className="rounded-full px-8 py-3 text-lg font-semibold shadow-lg"
-                        >
-                            Join Us
-                        </Button>
-                    </Link>
+                   
                 </motion.div>
             </div>
         </div>

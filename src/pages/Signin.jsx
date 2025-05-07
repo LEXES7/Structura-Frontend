@@ -38,7 +38,7 @@ export default function Signin() {
       if (res.ok) {
         dispatch(signInSuccess({ ...data, token: data.token }));
         if (data.isAdmin) {
-          navigate('/admin');
+          navigate('/admin-dashboard');
         } else {
           navigate('/dashboard?tab=profile');
         }
