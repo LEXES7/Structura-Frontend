@@ -1,6 +1,15 @@
 import React from 'react';
 import { Sidebar, SidebarItem, SidebarItemGroup, SidebarItems } from 'flowbite-react';
-import { HiArrowSmRight, HiUser, HiOutlineUsers, HiOutlineCalendar } from 'react-icons/hi';
+import { 
+  HiArrowSmRight, 
+  HiUser, 
+  HiOutlineUsers, 
+  HiOutlineCalendar,
+  HiOutlineAcademicCap,
+  HiOutlineDocumentText,
+  HiOutlineChartPie,
+  HiOutlineCog
+} from 'react-icons/hi';
 import { Link, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { signoutSuccess } from '../redux/userSlice';
@@ -51,13 +60,25 @@ export default function UnifiedSidebar() {
               </>
             )}
              
-             
-
             {/* Admin Specific Items */}
             {isAdmin && (
-              <SidebarItem icon={HiOutlineUsers} as={Link} to="/admin-dashboard">
-                Manage Users
-              </SidebarItem>
+              <>
+                <SidebarItem icon={HiOutlineChartPie} as={Link} to="/admin-dashboard">
+                  Dashboard
+                </SidebarItem>
+                <SidebarItem icon={HiOutlineUsers} as={Link} to="/admin-dashboard">
+                  Manage Users
+                </SidebarItem>
+                <SidebarItem icon={HiOutlineAcademicCap} as={Link} to="/admin-dashboard">
+                  Manage Courses
+                </SidebarItem>
+                <SidebarItem icon={HiOutlineDocumentText} as={Link} to="/admin-dashboard">
+                  Manage Posts
+                </SidebarItem>
+                <SidebarItem icon={HiOutlineCog} as={Link} to="/dashboard?tab=settings">
+                  Settings
+                </SidebarItem>
+              </>
             )}
 
             {/* Sign Out */}
