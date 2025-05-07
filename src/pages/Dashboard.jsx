@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
-import { Tabs } from 'flowbite-react';
 import { HiUserCircle, HiDocumentText } from 'react-icons/hi';
 import UnifiedSidebar from '../components/DashSidebar';
 import DisplayPosts from '../components/DisplayPosts/DisplayPosts';
@@ -38,35 +37,50 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="flex min-h-screen bg-gray-100">
+    <div className="flex min-h-screen bg-gray-900">
       <UnifiedSidebar /> {/* Sidebar */}
-      <div className="flex-1 p-4 overflow-auto">
-        <h1 className="text-3xl font-bold mb-6">Dashboard</h1>
+      <div className="flex-1 p-6 overflow-auto">
+        <h1 className="text-3xl font-bold mb-6 text-white">Dashboard</h1>
         
-        {/* Simple tab navigation */}
-        <div className="flex mb-6 border-b">
+        {/* Enhanced tab navigation with dark theme styling */}
+        <div className="flex mb-6 border-b border-gray-700">
           <button
             onClick={() => handleTabChange('profile')}
-            className={`px-4 py-2 ${tab === 'profile' ? 'border-b-2 border-blue-600 text-blue-600' : ''}`}
+            className={`px-6 py-3 transition-all duration-200 ${
+              tab === 'profile' 
+                ? 'border-b-2 border-blue-500 text-blue-400 font-medium' 
+                : 'text-gray-400 hover:text-gray-200'
+            }`}
           >
-            <HiUserCircle className="inline mr-2" /> Profile
+            <HiUserCircle className="inline mr-2 h-5 w-5" /> Profile
           </button>
           <button
             onClick={() => handleTabChange('displaypost')}
-            className={`px-4 py-2 ${tab === 'displaypost' ? 'border-b-2 border-blue-600 text-blue-600' : ''}`}
+            className={`px-6 py-3 transition-all duration-200 ${
+              tab === 'displaypost' 
+                ? 'border-b-2 border-blue-500 text-blue-400 font-medium' 
+                : 'text-gray-400 hover:text-gray-200'
+            }`}
           >
-            <HiDocumentText className="inline mr-2" /> My Posts
+            <HiDocumentText className="inline mr-2 h-5 w-5" /> My Posts
           </button>
         </div>
         
-        {/* Render content based on the tab */}
-        {tab === 'displaypost' && <DisplayPosts isDashboard={true} />}
-        {tab === 'profile' && <Profile />}
-        {tab !== 'displaypost' && tab !== 'profile' && (
-          <div className="text-center text-gray-500 p-10">
-            <p>Invalid tab selected. Please choose a valid option from the sidebar.</p>
-          </div>
-        )}
+        {/* Content wrapper with dark styling */}
+        <div className="bg-gray-800 rounded-lg shadow-lg overflow-hidden">
+          {/* Render content based on the tab */}
+          {tab === 'displaypost' && <DisplayPosts isDashboard={true} />}
+          {tab === 'profile' && (
+            <div className="bg-gray-800 p-6 rounded-lg">
+              <Profile />
+            </div>
+          )}
+          {tab !== 'displaypost' && tab !== 'profile' && (
+            <div className="text-center text-gray-300 p-10">
+              <p>Invalid tab selected. Please choose a valid option from the sidebar.</p>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
