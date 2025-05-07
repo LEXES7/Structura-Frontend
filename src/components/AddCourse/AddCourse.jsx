@@ -10,7 +10,6 @@ export default function AddCourse() {
         courseName: '',
     });
     const [pdfFile, setPdfFile] = useState(null);
-    const [videoFile, setVideoFile] = useState(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
     const [success, setSuccess] = useState(null);
@@ -25,11 +24,6 @@ export default function AddCourse() {
     const handlePdfChange = (e) => {
         const selectedFile = e.target.files[0];
         setPdfFile(selectedFile);
-    };
-
-    const handleVideoChange = (e) => {
-        const selectedFile = e.target.files[0];
-        setVideoFile(selectedFile);
     };
 
     const handleSubmit = async (e) => {
@@ -58,9 +52,6 @@ export default function AddCourse() {
             if (pdfFile) {
                 data.append('pdfFile', pdfFile);
             }
-            if (videoFile) {
-                data.append('videoFile', videoFile);
-            }
 
             const response = await axios.post('/api/courses', data, {
                 headers: {
@@ -73,7 +64,6 @@ export default function AddCourse() {
             console.log('Course created:', response.data);
             setFormData({ courseName: '' });
             setPdfFile(null);
-            setVideoFile(null);
             setTimeout(() => navigate('/displaycourse'), 1000); // Redirect to see the course
         } catch (err) {
             console.error('Error creating course:', err);
@@ -84,10 +74,10 @@ export default function AddCourse() {
     };
 
     return (
-        <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+        <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4 bg-[url('src/assets/home.jpg')] bg-cover bg-center bg-no-repeat">
             <Card className="w-full max-w-lg mx-auto shadow-lg rounded-lg">
                 <div className="p-6">
-                    <h2 className="text-2xl font-bold text-gray-800 mb-6 text-center">Add New Course</h2>
+                    <h2 className="text-2xl font-bold text-gray-800 mb-6 text-center">Add New Lesson</h2>
 
                     {/* Success/Error Alerts */}
                     {success && (
@@ -110,7 +100,7 @@ export default function AddCourse() {
                                 name="courseName"
                                 value={formData.courseName}
                                 onChange={handleChange}
-                                placeholder="Lecture Name"
+                                placeholder="Lesson Name"
                                 required
                                 icon={HiBookOpen}
                                 className="mt-1"
@@ -126,31 +116,16 @@ export default function AddCourse() {
                                 name="pdfFile"
                                 onChange={handlePdfChange}
                                 accept=".pdf"
-                                 placeholder="Lecture Notes"
+                                placeholder="Lecture pdf"
                                 className="mt-1"
                                 helperText="PDF file (max 10MB)"
                             />
                             {pdfFile && <p className="text-sm text-gray-500 mt-1">Selected: {pdfFile.name}</p>}
                         </div>
 
-                        {/* Video Upload */}
-                        <div>
-                            <Label htmlFor="videoFile" value="Course Video" className="text-gray-700 font-medium" />
-                            <FileInput
-                                id="videoFile"
-                                name="videoFile"
-                                onChange={handleVideoChange}
-                                accept="video/*"
-                                className="mt-1"
-                                 placeholder="Lecture Vedio"
-                                helperText="MP4, AVI, or MOV (max 50MB)"
-                            />
-                            {videoFile && <p className="text-sm text-gray-500 mt-1">Selected: {videoFile.name}</p>}
-                        </div>
-
                         {/* Submit Button */}
                         <Button type="submit" color="blue" className="w-full" disabled={loading}>
-                            {loading ? 'Adding...' : 'Add Course'}
+                            {loading ? 'Adding...' : 'Add Lesson'}
                         </Button>
                     </form>
                 </div>

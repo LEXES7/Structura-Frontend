@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Button, Label, TextInput, Textarea } from 'flowbite-react';
+import { Button, Label, TextInput, Textarea, Select } from 'flowbite-react';
 import { useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 
@@ -119,8 +119,7 @@ export default function DisplayLearns({ isDashboard = false }) {
     }
 
     return (
-        
-        <div className="container mx-auto px-4 py-8">
+        <div className="container mx-auto px-4 py-8 bg-[url('src/assets/home.jpg')] bg-cover bg-center bg-no-repeat">
             {error && (
                 <div className="mb-4 p-4 bg-red-100 text-red-700 rounded-lg">
                     {error}
@@ -130,12 +129,12 @@ export default function DisplayLearns({ isDashboard = false }) {
            {/* Main Content */}
 <div className="flex-1 p-6">
   <div className="flex justify-between items-center">
-    <div>
-      <h1 className="text-3xl font-bold text-gray-800">Welcome to Learning Dashboard</h1>
-      <p className="mt-4 text-gray-600">
-        This is the Learn page. Use the sidebar to navigate through your learning options.
-      </p>
-    </div>
+  <div>
+                        <h1 className="text-3xl font-bold text-white">Courses</h1>
+                        <p className="mt-4 text-white">
+                            {isDashboard ? 'View and manage your courses.' : 'Explore all available courses.'}
+                        </p>
+                    </div>
     <Button color="green" onClick={handleAddLearn} className="ml-4">
       + Add Course
     </Button>
@@ -143,8 +142,9 @@ export default function DisplayLearns({ isDashboard = false }) {
 </div>
 
             {editingLearnId && (
-               <div className="mb-8 p-2 bg-black-100 rounded-lg shadow-md">
-                    <h2 className="text-2xl font-bold mb-4">Edit Learn</h2>
+                <div className="mb-8 p-6 bg-gray-100 rounded-lg shadow-md">
+                    <h2 className="text-2xl font-bold mb-4">Edit Course</h2>
+                    
                     <div className="mb-4">
                         <Label htmlFor="learnName" value="Learn Title" />
                         <TextInput
@@ -157,13 +157,18 @@ export default function DisplayLearns({ isDashboard = false }) {
                     </div>
                     <div className="mb-4">
                         <Label htmlFor="learnCategory" value="Category" />
-                        <TextInput
+                        <Select
                             id="learnCategory"
                             name="learnCategory"
                             value={editFormData.learnCategory}
                             onChange={handleEditChange}
                             required
-                        />
+                        >
+                            <option value="" disabled>Select a category</option>
+                            <option value="Beginner">Beginner</option>
+                            <option value="Intermediate">Intermediate</option>
+                            <option value="Advanced">Advanced</option>
+                        </Select>
                     </div>
                     <div className="mb-4">
                         <Label htmlFor="learnDescription" value="Description" />
@@ -222,17 +227,10 @@ export default function DisplayLearns({ isDashboard = false }) {
                         <h2 className="text-xl font-semibold mb-2 text-gray-800 truncate">{learn.learnName}</h2>
                         <p className="text-gray-600 text-sm mb-2">Category: {learn.learnCategory || 'Uncategorized'}</p>
                         <p className="text-gray-700 text-base line-clamp-2 mb-4">{learn.learnDescription || 'No description'}</p>
-                       
- 
-
-
-
-
-                            <div className="flex space-x-2">
-                                <Button color="blue" size="sm" className="flex-1" onClick={() => handleEditClick(learn)}>Edit</Button>
-                                <Button color="red" size="sm"className="flex-1"  onClick={() => handleDelete(learn.id)}>Delete</Button>
-                            </div>
-                       
+                        <div className="flex space-x-2">
+                            <Button color="blue" size="sm" className="flex-1" onClick={() => handleEditClick(learn)}>Edit</Button>
+                            <Button color="red" size="sm" className="flex-1" onClick={() => handleDelete(learn.id)}>Delete</Button>
+                        </div>
                     </div>
                 ))}
             </div>

@@ -124,7 +124,7 @@ export default function DisplayCourses({ isDashboard = false }) {
     }
 
     return (
-        <div className="container mx-auto px-4 py-8">
+        <div className="container mx-auto px-4 py-8 bg-[url('src/assets/home.jpg')] bg-cover bg-center bg-no-repeat rounded-lg shadow-md mb-8">
             {error && (
                 <Alert color="failure" icon={HiInformationCircle} className="mb-4">
                     {error}
@@ -132,12 +132,12 @@ export default function DisplayCourses({ isDashboard = false }) {
             )}
 
             {/* Main Content */}
-            <div className="flex-1 p-6">
-                <div className="flex justify-between items-center">
+            <div className="flex-1 p-6 ">
+                <div className="flex justify-between items-center ">
                     <div>
-                        <h1 className="text-3xl font-bold text-gray-800">Courses</h1>
-                        <p className="mt-4 text-gray-600">
-                            {isDashboard ? 'View and manage your courses.' : 'Explore all available courses.'}
+                        <h1 className="text-3xl font-bold text-white">Lessons</h1>
+                        <p className="mt-4 text-white">
+                            {isDashboard ? 'View and manage your courses.' : 'Explore all available lessons.'}
                         </p>
                     </div>
                    
@@ -150,7 +150,7 @@ export default function DisplayCourses({ isDashboard = false }) {
 
             {editingCourseId && (
                 <div className="mb-8 p-6 bg-gray-100 rounded-lg shadow-md">
-                    <h2 className="text-2xl font-bold mb-4">Edit Course</h2>
+                    <h2 className="text-2xl font-bold mb-4">Edit Lesson</h2>
                     <div className="mb-4">
                         <Label htmlFor="courseName" value="Course Title" />
                         <TextInput
