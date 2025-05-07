@@ -38,7 +38,8 @@ import AboutUs from './pages/About';
 
 
 
-
+import EventCalendar from './components/DisplayEvents/EventCalendar'
+import AddEventForm from './components/Addevents/AddEventForm'
 
 export default function App() {
   return (
@@ -85,6 +86,12 @@ export default function App() {
           <Route path="/home" element={<Home />} />
           <Route path="*" element={<div>Page Not Found</div>} />
           <Route path="/post/:postId" element={<PostPage />} />
+
+
+
+
+          <Route path="/ap" element={<AddEventForm />} />
+          <Route path="/eventc" element={<EventCalendar />} />
 
 
           

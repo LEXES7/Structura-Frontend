@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button, Label, TextInput, Textarea } from 'flowbite-react';
 import axios from 'axios';
 import { useSelector } from 'react-redux';
 
-const AddEventForm = () => {
+const AddEventForm = ({ selectedDate, eventData, onClose, onEventChange }) => {
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -18,13 +18,47 @@ const AddEventForm = () => {
   const { currentUser } = useSelector((state) => state.user || {});
   const token = currentUser?.token;
 
-  console.log('Redux State in AddEventForm:', { currentUser, token });
+  // Initialize form with event data (for editing) or selected date (for new events)
+  useEffect(() => {
+    if (eventData) {
+      // Editing an existing event
+      setFormData({
+        title: eventData.title || '',
+        description: eventData.description || '',
+        startTime: eventData.startTime ? eventData.startTime.slice(0, 16) : '',
+        endTime: eventData.endTime ? eventData.endTime.slice(0, 16) : '',
+        zoomLink: eventData.zoomLink || '',
+        category: eventData.category || '',
+      });
+    } else if (selectedDate) {
+      // New event with selected date
+      const dateStr = selectedDate.toISOString().slice(0, 10);
+      setFormData({
+        title: '',
+        description: '',
+        startTime: `${dateStr}T09:00`, // Default to 9 AM
+        endTime: '',
+        zoomLink: '',
+        category: '',
+      });
+    } else {
+      // No selected date (e.g., from button)
+      setFormData({
+        title: '',
+        description: '',
+        startTime: '',
+        endTime: '',
+        zoomLink: '',
+        category: '',
+      });
+    }
+  }, [eventData, selectedDate]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     // Format datetime-local value to ISO 8601 (e.g., "2025-04-03T02:15:00")
     const formattedValue = name === 'startTime' || name === 'endTime' 
-      ? value + ':00' // Append seconds to match "yyyy-MM-dd'T'HH:mm:ss"
+      ? value + ':00'
       : value;
     setFormData({ ...formData, [name]: formattedValue });
   };
@@ -46,32 +80,51 @@ const AddEventForm = () => {
     console.log('Request Payload:', payload);
 
     try {
-      const response = await axios.post(
-        '/api/events', // Using proxy URL from vite.config.js
-        payload,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/x-www-form-urlencoded',
-          },
-        }
-      );
+      let response;
+      if (eventData) {
+        // Update existing event
+        response = await axios.put(
+          `/api/events/${eventData.id}`,
+          payload,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              'Content-Type': 'application/x-www-form-urlencoded'
+            }
+          }
+        );
+        setSuccess('Event updated successfully!');
+      } else {
+        // Create new event
+        response = await axios.post(
+          `/api/events`,
+          payload,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              'Content-Type': 'application/x-www-form-urlencoded'
+            }
+          }
+        );
+        setSuccess('Event created successfully!');
+      }
       console.log('Response Data:', response.data);
-      setSuccess('Event created successfully!');
       setFormData({
         title: '',
         description: '',
         startTime: '',
         endTime: '',
         zoomLink: '',
-        category: '',
+        category: ''
       });
+      onEventChange(); // Notify parent to refresh events
+      onClose(); // Close the modal
     } catch (err) {
       console.error('Axios Error:', {
         message: err.message,
         response: err.response?.data,
         status: err.response?.status,
-        headers: err.response?.headers,
+        headers: err.response?.headers
       });
       const errorMessage =
         err.response?.data?.message || err.message || 'Network Error';
@@ -79,9 +132,35 @@ const AddEventForm = () => {
     }
   };
 
+  const handleDelete = async () => {
+    if (!eventData || !token) return;
+
+    try {
+      await axios.delete(`/api/events/${eventData.id}`, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+      setSuccess('Event deleted successfully!');
+      onEventChange(); // Notify parent to refresh events
+      onClose(); // Close the modal
+    } catch (err) {
+      console.error('Delete Error:', {
+        message: err.message,
+        response: err.response?.data,
+        status: err.response?.status
+      });
+      const errorMessage =
+        err.response?.data?.message || err.message || 'Failed to delete event';
+      setError(errorMessage);
+    }
+  };
+
   return (
-    <div className="max-w-md mx-auto p-4 bg-white shadow-md rounded-lg">
-      <h2 className="text-2xl font-bold mb-4 text-gray-800">Add New Event</h2>
+    <div className="p-4 bg-white rounded-lg">
+      <h2 className="text-2xl font-bold mb-4 text-gray-800">
+        {eventData ? 'Edit Event' : 'Add New Event'}
+      </h2>
       {error && <p className="text-red-500 mb-4">{error}</p>}
       {success && <p className="text-green-500 mb-4">{success}</p>}
       <form onSubmit={handleSubmit} className="space-y-4">
@@ -149,9 +228,21 @@ const AddEventForm = () => {
             placeholder="e.g., Workshop, Meeting"
           />
         </div>
-        <Button type="submit" color="blue" className="w-full">
-          Add Event
-        </Button>
+        <div className="flex space-x-2">
+          <Button type="submit" color="blue" className="w-full">
+            {eventData ? 'Update Event' : 'Add Event'}
+          </Button>
+          {eventData && (
+            <Button
+              type="button"
+              color="red"
+              className="w-full"
+              onClick={handleDelete}
+            >
+              Delete Event
+            </Button>
+          )}
+        </div>
       </form>
     </div>
   );
