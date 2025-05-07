@@ -71,6 +71,49 @@ export default function Course() {
 
     return (
         <div className="flex min-h-screen bg-gray-100">
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
             {/* Main Content */}
             <div className="flex-1 ml-64 p-6">
                 {error && (
@@ -88,6 +131,7 @@ export default function Course() {
                         </div>
                     </div>
                     <br />
+                    
                     {/* Total Progress Box */}
                     {totalProgress !== null && (
                         <div className="mb-6">
@@ -105,64 +149,51 @@ export default function Course() {
                         <h1 className="text-3xl font-bold text-gray-800">Most Popular Courses</h1>
                     </div>
                 </div>
-
-                <div className=" overflow-y-auto grid grid-cols-1 gap-6 w-full">
-    {courses.map((course) => (
-        <div key={course.id} className="bg-white rounded-lg shadow-md p-4 relative w-full">
-            {/* Completion Box */}
-            <div
-                className={`absolute top-4 right-4 w-6 h-6 border-2 cursor-pointer ${
-                    progress[course.id] >= 10 ? 'bg-green-500 border-green-500' : 'bg-white border-gray-300'
-                }`}
-                onClick={() => handleCompleteCourse(course.id)}
-                title={progress[course.id] >= 10 ? 'Mark as incomplete' : 'Mark as completed (10%)'}
-            />
-            {/* Individual Progress Percentage */}
-            <p className="absolute top-12 right-4 text-xs text-gray-600">
-                {progress[course.id]}%
-            </p>
-            {course.courseVideo ? (
-                <video
-                    className="w-full h-48 object-cover mb-4 rounded"
-                    src={`http://localhost:8080${course.courseVideo}`}
-                    onError={(e) => (e.target.style.display = 'none')}
-                    muted
-                    loop
-                    autoPlay
-                >
-                    Your browser does not support the video tag.
-                </video>
-            ) : (
-                <div className="w-full h-48 bg-gray-200 flex items-center justify-center mb-4 rounded">
-                    <span className="text-gray-500">Lecture Video</span>
+                <div className="overflow-y-auto grid grid-cols-1 gap-6 w-full">
+                    {courses.map((course) => (
+                         <div  className="bg-gradient-to-r from-red-100 via-yellow-100 to-gray-100 rounded-lg shadow-md p-4 relative w-full">
+                        <div key={course.id} className="bg-white rounded-lg shadow-md p-4 relative w-full">
+                            {/* Completion Box */}
+                            <div
+                                className={`absolute top-4 right-4 w-6 h-6 border-2 cursor-pointer ${
+                                    progress[course.id] >= 10 ? 'bg-green-500 border-green-500' : 'bg-white border-gray-300'
+                                }`}
+                                onClick={() => handleCompleteCourse(course.id)}
+                                title={progress[course.id] >= 10 ? 'Mark as incomplete' : 'Mark as completed (10%)'}
+                            />
+                            {/* Individual Progress Percentage */}
+                            <p className="absolute top-12 right-4 text-xs text-gray-600">
+                                {progress[course.id]}%
+                            </p>
+                            
+                            <h2 className="text-xl font-semibold mb-2 text-gray-800 truncate">
+                                {course.courseName}
+                            </h2>
+                            {course.coursePdf && (
+                                <p className="text-gray-600 text-sm mb-2">
+                                    <a
+                                        href={`http://localhost:8080${course.coursePdf}`}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="text-blue-600 hover:underline"
+                                    >
+                                        Lecture PDF
+                                    </a>
+                                </p>
+                            )}
+                        </div>
+                        </div>
+                    ))}
                 </div>
-            )}
-            <h2 className="text-xl font-semibold mb-2 text-gray-800 truncate">
-                {course.courseName}
-            </h2>
-            {course.coursePdf && (
-                <p className="text-gray-600 text-sm mb-2">
-                    <a
-                        href={`http://localhost:8080${course.coursePdf}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-blue-600 hover:underline"
-                    >
-                        Lecture PDF
-                    </a>
-                </p>
-            )}
-        </div>
-    ))}
-</div>
+               
                 {/* Finish Button */}
-                <div className="mt-6 flex justify-center">
+                <div className="mt-5 flex justify-center">
                     <Button
-                        color="blue"
+                        color="green"
                         onClick={handleFinish}
                         className="w-full max-w-xs"
                     >
-                        Finish
+                        Completed Successfully!
                     </Button>
                 </div>
             </div>
