@@ -50,7 +50,7 @@ export default function DashSidebar() {
 
   const handleSignout = async () => {
     try {
-      const res = await fetch('/api/user/signout', {
+      const res = await fetch('http://localhost:8080/api/auth/signout', {
         method: 'POST',
       });
       const data = await res.json();
@@ -75,7 +75,7 @@ export default function DashSidebar() {
   }
 
   return (
-    <div className="h-full min-h-screen bg-gray-800 text-white">
+    <div className="h-full min-h-scree text-white">
       <Sidebar className="h-full">
         <SidebarItems>
           {/* User Profile Area */}

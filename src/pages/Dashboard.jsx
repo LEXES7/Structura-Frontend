@@ -37,19 +37,19 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="flex min-h-screen bg-gray-900">
+    <div className="flex min-h-screen bg-gray-50">
       <UnifiedSidebar /> {/* Sidebar */}
       <div className="flex-1 p-6 overflow-auto">
-        <h1 className="text-3xl font-bold mb-6 text-white">Dashboard</h1>
+        <h1 className="text-3xl font-bold mb-6 text-gray-900">Dashboard</h1>
         
-        {/* Enhanced tab navigation with dark theme styling */}
-        <div className="flex mb-6 border-b border-gray-700">
+        {/* Enhanced tab navigation with light theme styling */}
+        <div className="flex mb-6 border-b border-gray-200">
           <button
             onClick={() => handleTabChange('profile')}
             className={`px-6 py-3 transition-all duration-200 ${
               tab === 'profile' 
-                ? 'border-b-2 border-blue-500 text-blue-400 font-medium' 
-                : 'text-gray-400 hover:text-gray-200'
+                ? 'border-b-2 border-blue-500 text-blue-600 font-medium' 
+                : 'text-gray-600 hover:text-gray-800'
             }`}
           >
             <HiUserCircle className="inline mr-2 h-5 w-5" /> Profile
@@ -58,25 +58,25 @@ export default function Dashboard() {
             onClick={() => handleTabChange('displaypost')}
             className={`px-6 py-3 transition-all duration-200 ${
               tab === 'displaypost' 
-                ? 'border-b-2 border-blue-500 text-blue-400 font-medium' 
-                : 'text-gray-400 hover:text-gray-200'
+                ? 'border-b-2 border-blue-500 text-blue-600 font-medium' 
+                : 'text-gray-600 hover:text-gray-800'
             }`}
           >
             <HiDocumentText className="inline mr-2 h-5 w-5" /> My Posts
           </button>
         </div>
         
-        {/* Content wrapper with dark styling */}
-        <div className="bg-gray-800 rounded-lg shadow-lg overflow-hidden">
+        {/* Content wrapper with light styling */}
+        <div className="bg-white rounded-lg shadow-lg overflow-hidden border border-gray-200">
           {/* Render content based on the tab */}
           {tab === 'displaypost' && <DisplayPosts isDashboard={true} />}
           {tab === 'profile' && (
-            <div className="bg-gray-800 p-6 rounded-lg">
+            <div className="bg-white p-0 rounded-lg">
               <Profile />
             </div>
           )}
           {tab !== 'displaypost' && tab !== 'profile' && (
-            <div className="text-center text-gray-300 p-10">
+            <div className="text-center text-gray-700 p-10">
               <p>Invalid tab selected. Please choose a valid option from the sidebar.</p>
             </div>
           )}
