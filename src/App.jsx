@@ -33,6 +33,7 @@ import AdminProfile from './pages/AdminProfile';
 
 
 import EventCalendar from './components/DisplayEvents/EventCalendar'
+import Userside from './components/Addevents/AddEventForm'
 
 export default function App() {
   return (
@@ -58,7 +59,8 @@ export default function App() {
 
 
 
-          <Route path="eventc" element={<EventCalendar />} />
+          <Route path="/eventc" element={<EventCalendar />} />
+          <Route path="/uav" element={<Userside />} />
           
           {/* Private routes for all authenticated users */}
           <Route element={<PrivateRoute />}>
