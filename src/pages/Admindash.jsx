@@ -67,8 +67,8 @@ export default function Admindash() {
       <div className="w-64">
         <DashSidebar />
       </div>
-      <div className="flex-1 p-4">
-        <h1 className="text-3xl font-bold mb-6">Admin Dashboard</h1>
+      <div className="flex-1 p-4 dark:bg-gray-800 bg-gray-100 min-h-screen">
+        <h1 className="text-3xl font-bold mb-6 dark:text-white">Admin Dashboard</h1>
         
         {/* Search Bar */}
         <div className="mb-6">
@@ -81,7 +81,7 @@ export default function Admindash() {
         </div>
 
         {/* Tab Navigation */}
-        <div className="flex border-b mb-4">
+        <div className="flex border-b mb-4 dark:text-white">
           <button
             className={`px-4 py-2 ${activeTab === 'users' ? 'border-b-2 border-blue-600 text-blue-600' : ''}`}
             onClick={() => switchTab('users')}
@@ -109,7 +109,7 @@ export default function Admindash() {
         </div>
 
         {/* Content Area */}
-        <div className="bg-white rounded-lg shadow">
+        <div className=" rounded-lg shadow dark:text-white">
           {activeTab === 'users' && <ShowUsers searchTerm={searchTerm} />}
           {activeTab === 'courses' && <DisplayCourses isDashboard={true} />}
           {activeTab === 'posts' && <ShowPosts searchTerm={searchTerm} />}
