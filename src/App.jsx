@@ -25,6 +25,15 @@ import PostPage from './pages/PostPage';
 import AboutUs from './pages/About';
 import AdminProfile from './pages/AdminProfile';
 
+
+
+
+
+
+
+
+import EventCalendar from './components/DisplayEvents/EventCalendar'
+
 export default function App() {
   return (
     <div>
@@ -44,6 +53,12 @@ export default function App() {
           <Route path="/post/:postId" element={<PostPage />} />
           <Route path="/home" element={<Home />} />
           <Route path="/displaypost" element={<Displaypost />} /> {/* Moved from private routes */}
+
+
+
+
+
+          <Route path="eventc" element={<EventCalendar />} />
           
           {/* Private routes for all authenticated users */}
           <Route element={<PrivateRoute />}>
