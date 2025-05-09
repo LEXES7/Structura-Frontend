@@ -1,8 +1,10 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Badge } from 'flowbite-react';
 import homeImage from '../../assets/home.jpg';
 import featureImage from '../../assets/img.jpg';
+import axios from 'axios';
+import ReviewCard from '../ReviewCard';
 
 import featureImageh1 from '../../assets/homepic1.jpeg';
 import featureImageh2 from '../../assets/homepic2.jpeg';
@@ -49,6 +51,9 @@ const features = [
 
 export default function Home() {
     const scrollRef = useRef(null);
+    const [topReviews, setTopReviews] = useState([]);
+    const [loadingReviews, setLoadingReviews] = useState(false);
+    const [reviewError, setReviewError] = useState(null);
 
     useEffect(() => {
         const scrollContainer = scrollRef.current;
@@ -69,6 +74,26 @@ export default function Home() {
 
         const interval = setInterval(scroll, 20); // interval for scrolling
         return () => clearInterval(interval);
+    }, []);
+
+    // Fetch top reviews
+    useEffect(() => {
+        const fetchTopReviews = async () => {
+            try {
+                setLoadingReviews(true);
+                const response = await axios.get('http://localhost:8080/api/reviews/top-rated');
+                // Get only the top 3 reviews
+                setTopReviews(response.data.slice(0, 3));
+                setReviewError(null);
+            } catch (err) {
+                console.error('Error fetching top reviews:', err);
+                setReviewError('Failed to load reviews');
+            } finally {
+                setLoadingReviews(false);
+            }
+        };
+
+        fetchTopReviews();
     }, []);
 
     return (
@@ -96,7 +121,7 @@ export default function Home() {
             <div className="relative w-full bg-black h-48 flex flex-col items-center justify-center text-white px-6">
                 <div className="p-4 rounded-md max-w-5xl text-left">
                     <p className="text-lg md:text-xl Quicksand">
-                        "Structura is an invaluable resource! The tutorials are not only clear, but linked to live projects or famous examples, making them much more engaging & interesting compared to others. The downloads have also been useful, helping me to create my own graphic standards & detailed drawings.”
+                        "Structura is an invaluable resource! The tutorials are not only clear, but linked to live projects or famous examples, making them much more engaging & interesting compared to others. The downloads have also been useful, helping me to create my own graphic standards & detailed drawings."
                     </p>
                     <p className="mt-4 text-right">- Developer Team, SLIIT</p>
                 </div>
@@ -166,7 +191,7 @@ export default function Home() {
                     <div className="w-full md:w-1/2 text-left gap-4 md:pr-10 order-2 md:order-1">
                         <h2 className="text-3xl font-bold mb-4">Innovative Urban Architecture</h2>
                         <p className="text-lg mb-6">
-Modern skyscraper with sleek glass facades and integrated green terraces, symbolizing sustainable design and architectural innovation. The building's unique structural features, such as its vertical gardens and expansive windows, reflect cutting-edge techniques in urban development. Ideal for inspiring learners and professionals at Structura to explore advanced 3D rendering and eco-friendly architectural practices.
+                            Modern skyscraper with sleek glass facades and integrated green terraces, symbolizing sustainable design and architectural innovation. The building's unique structural features, such as its vertical gardens and expansive windows, reflect cutting-edge techniques in urban development. Ideal for inspiring learners and professionals at Structura to explore advanced 3D rendering and eco-friendly architectural practices.
                         </p>
                         <button className="px-6 py-3 border border-white text-white font-semibold rounded-full hover:bg-black hover:text-white transition">
                             Join Us
@@ -182,8 +207,7 @@ Modern skyscraper with sleek glass facades and integrated green terraces, symbol
                 </div>
             </div>
 
-
-                        <div className="relative w-full bg-white h-auto flex flex-col items-center justify-center text-black px-6 py-10">
+            <div className="relative w-full bg-white h-auto flex flex-col items-center justify-center text-black px-6 py-10">
                 <div className="flex flex-col md:flex-row items-center max-w-6xl w-full gap-10">
                     <div className="w-full md:w-1/2 relative -ml-10">
                         <img
@@ -195,10 +219,46 @@ Modern skyscraper with sleek glass facades and integrated green terraces, symbol
                     <div className="w-full md:w-1/2 text-left gap-4 md:pl-10">
                         <h2 className="text-3xl font-bold mb-4">Timeless Architectural Heritage</h2>
                         <p className="text-lg mb-6">
- classic historical building adorned with ornate facades, detailed columns, and intricate sculptures, representing the rich legacy of architectural artistry. Perfect for Structura's community to study and appreciate iconic structures, this image invites users to deepen their expertise through drawing courses and historical analysis of industry giants.                        </p>
+                            A classic historical building adorned with ornate facades, detailed columns, and intricate sculptures, representing the rich legacy of architectural artistry. Perfect for Structura's community to study and appreciate iconic structures, this image invites users to deepen their expertise through drawing courses and historical analysis of industry giants.
+                        </p>
                         <button className="px-6 py-3 border border-black text-black font-semibold rounded-full hover:bg-black hover:text-white transition">
                             Join Us
                         </button>
+                    </div>
+                </div>
+            </div>
+
+            {/* Top Reviews */}
+            <div className="relative w-full bg-gray-100 h-auto py-16">
+                <div className="container mx-auto px-4">
+                    <h2 className="text-3xl font-bold text-center mb-10">What Our Users Say</h2>
+                    
+                    {loadingReviews ? (
+                        <div className="flex justify-center items-center h-40">
+                            <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-blue-500"></div>
+                        </div>
+                    ) : reviewError ? (
+                        <div className="text-center text-red-500">
+                            {reviewError}
+                        </div>
+                    ) : (
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-6xl mx-auto">
+                            {topReviews.length > 0 ? (
+                                topReviews.map(review => (
+                                    <ReviewCard key={review._id || review.id} review={review} />
+                                ))
+                            ) : (
+                                <div className="col-span-3 text-center py-10">
+                                    <p className="text-gray-500">No reviews available yet.</p>
+                                </div>
+                            )}
+                        </div>
+                    )}
+                    
+                    <div className="text-center mt-12">
+                        <Link to="/reviews" className="px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition">
+                            See All Reviews
+                        </Link>
                     </div>
                 </div>
             </div>
