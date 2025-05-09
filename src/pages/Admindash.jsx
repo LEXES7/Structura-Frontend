@@ -6,30 +6,10 @@ import { HiUsers, HiAcademicCap, HiDocumentText, HiSearch, HiStar } from 'react-
 import DashSidebar from '../components/DashSidebar';
 import ShowUsers from '../components/admin/showusers';
 import ShowPosts from '../components/admin/showposts';
-
-
-
 import ShowLearn from '../components/admin/showlearn';
 import ShowLesson from '../components/admin/showlesson';
-
-
-
-
-
-
-
-
-
-
 import DisplayCourses from '../components/DisplayCourses/DisplayCourses';
 import AdminReview from '../components/admin/adminreview';
-
-
-
-
-
-
-
 
 export default function Admindash() {
   const { currentUser } = useSelector((state) => state.user);
@@ -49,7 +29,7 @@ export default function Admindash() {
     const params = new URLSearchParams(location.search);
     const tabFromUrl = params.get('tab');
     
-    if (tabFromUrl && ['users', 'courses', 'posts', 'reviews'].includes(tabFromUrl)) {
+    if (tabFromUrl && ['users', 'courses', 'lessons', 'posts', 'reviews'].includes(tabFromUrl)) {
       setActiveTab(tabFromUrl);
     } else if (location.state?.activeTab) {
       setActiveTab(location.state.activeTab);
@@ -118,10 +98,7 @@ export default function Admindash() {
           </button>
           <button
             className={`px-4 py-2 ${activeTab === 'lessons' ? 'border-b-2 border-blue-600 text-blue-600' : ''}`}
-            onClick={() => {
-              setActiveTab('courses');
-              navigate('/admin-dashboard', { state: { activeTab: 'lessons' }, replace: true });
-            }}
+            onClick={() => switchTab('lessons')}
           >
             <HiAcademicCap className="inline mr-2" /> Lessons
           </button>
@@ -140,20 +117,10 @@ export default function Admindash() {
         </div>
 
         {/* Content Area */}
-        <div className=" rounded-lg shadow dark:text-white">
+        <div className="rounded-lg shadow dark:text-white">
           {activeTab === 'users' && <ShowUsers searchTerm={searchTerm} />}
-
-
-
-
-
-
-
-
-
           {activeTab === 'courses' && <ShowLearn searchTerm={searchTerm} />}
           {activeTab === 'lessons' && <ShowLesson searchTerm={searchTerm} />}
-          {activeTab === 'courses' && <DisplayCourses isDashboard={true} />}
           {activeTab === 'posts' && <ShowPosts searchTerm={searchTerm} />}
           {activeTab === 'reviews' && <AdminReview searchTerm={searchTerm} />}
         </div>
