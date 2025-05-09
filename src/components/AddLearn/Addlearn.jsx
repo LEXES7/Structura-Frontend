@@ -111,20 +111,27 @@ export default function AddLearn() {
                     <form onSubmit={handleSubmit} className="space-y-5">
                         {/* Learn Title */}
                         <div>
-                            <Label htmlFor="learnName" value="Course Title" className="text-gray-700 font-medium" />
-                            <TextInput
-                                id="learnName"
-                                name="learnName"
-                                value={formData.learnName}
-                                onChange={handleChange}
-                                placeholder="Course Name"
-                                required
-                                icon={HiBookOpen}
-                                className="mt-1"
-                                color={formData.learnName.trim() ? 'success' : 'gray'}
-                            />
-                        </div>
-
+    <Label htmlFor="learnName" value="Course Title" className="text-gray-700 font-medium" />
+    <TextInput
+        id="learnName"
+        name="learnName"
+        value={formData.learnName}
+        onChange={(e) => {
+            const value = e.target.value;
+            if (/^[a-zA-Z\s]*$/.test(value)) {
+                handleChange(e); // Update the state only if the input is valid
+            }
+        }}
+        placeholder="Course Name"
+        required
+        icon={HiBookOpen}
+        className="mt-1"
+        color={formData.learnName.trim() ? 'success' : 'gray'}
+    />
+    {!/^[a-zA-Z\s]*$/.test(formData.learnName) && (
+        <p className="text-sm text-red-500 mt-1">Only letters are allowed. Please remove numbers or symbols.</p>
+    )}
+</div>
                         {/* Category Dropdown */}
                         <div>
                             <Label htmlFor="learnCategory" value="Category" className="text-gray-700 font-medium" />
@@ -147,19 +154,27 @@ export default function AddLearn() {
 
                         {/* Description */}
                         <div>
-                            <Label htmlFor="learnDescription" value="Description" className="text-gray-700 font-medium" />
-                            <Textarea
-                                id="learnDescription"
-                                name="learnDescription"
-                                value={formData.learnDescription}
-                                onChange={handleChange}
-                                placeholder="Describe your course"
-                                rows={4}
-                                required
-                                className="mt-1"
-                                color={formData.learnDescription.trim() ? 'success' : 'gray'}
-                            />
-                        </div>
+    <Label htmlFor="learnDescription" value="Description" className="text-gray-700 font-medium" />
+    <Textarea
+        id="learnDescription"
+        name="learnDescription"
+        value={formData.learnDescription}
+        onChange={(e) => {
+            const value = e.target.value;
+            if (/^[a-zA-Z\s]*$/.test(value)) {
+                handleChange(e); // Update the state only if the input is valid
+            }
+        }}
+        placeholder="Describe your course"
+        rows={4}
+        required
+        className="mt-1"
+        color={formData.learnDescription.trim() ? 'success' : 'gray'}
+    />
+    {!/^[a-zA-Z\s]*$/.test(formData.learnDescription) && (
+        <p className="text-sm text-red-500 mt-1">Only letters are allowed. Please remove numbers or symbols.</p>
+    )}
+</div>
 
                         {/* Image Upload */}
                         <div>
