@@ -63,42 +63,6 @@ export default function Learn() {
 
     return (
         <div className="flex min-h-screen bg-gray-100">
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-
             {/* Main Content */}
             <div className="flex-1 p-6">
                 {error && (
@@ -122,12 +86,8 @@ export default function Learn() {
                         {/* White Part */}
                         <div className="flex flex-col md:flex-row items-center max-w-6xl w-full gap-10">
                             {/* Image */}
-                            <div className="w-[400px] md:w-1/2 relative -ml-10 h-[220px]">
-                                <img
-                                    src="https://placehold.co/150x150"
-                                    alt="Feature"
-                                    className="rounded-2xl shadow-lg w-full h-full object-cover"
-                                />
+                            <div className=" w-[400px] md:w-1/2 relative -ml-10 h-[250px] bg-[url('src/assets/ar.jpeg')] bg-cover bg-center bg-no-repeat rounded-lg">
+                               
                             </div>
                             <div className="w-full md:w-1/2 text-left gap-4 md:pl-10">
                                 <h2 className="text-3xl font-bold mb-4">Explore Iconic Architecture with Practical Skill Development</h2>
@@ -220,27 +180,48 @@ export default function Learn() {
                         </Card>
                     </div>
                 </div>
-
                 <div className="h-[400px] overflow-y-auto grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
                     {filteredLearns.map((learn) => (
                         <div key={learn.id} className="bg-white rounded-lg shadow-md p-4">
                             {learn.learnImg && learn.learnImg !== 'default.png' ? (
-                                <img
-                                    className="w-full h-48 object-cover mb-4 rounded"
-                                    src={`http://localhost:8080${learn.learnImg}`}
-                                    alt={learn.learnName}
-                                    onError={(e) => (e.target.src = 'https://placehold.co/150x150')}
-                                />
+                                <div
+                                    className={`w-full h-48 mb-4 rounded ${
+                                        learn.learnCategory === 'Beginner'
+                                            ? "bg-[url('src/assets/home.jpg')] bg-cover bg-center bg-no-repeat"
+                                            : learn.learnCategory === 'Intermediate'
+                                            ? "bg-[url('src/assets/img.jpg')] bg-cover bg-center bg-no-repeat"
+                                            : learn.learnCategory === 'Advanced'
+                                            ? "bg-[url('src/assets/home.jpg')] bg-cover bg-center bg-no-repeat"
+                                            : 'bg-gray-200'
+                                    }`}
+                                >
+                                    <img
+                                        className="w-full h-48 object-cover rounded"
+                                        src={`http://localhost:8080${learn.learnImg}`}
+                                        alt={learn.learnName}
+                                        onError={(e) => (e.target.src = '')}
+                                    />
+                                </div>
                             ) : (
-                                <div className="w-full h-48 bg-gray-200 flex items-center justify-center mb-4 rounded">
-                                    <span className="text-gray-500">No Image</span>
+                                <div
+                                    className={`w-full h-48 flex items-center justify-center mb-4 rounded ${
+                                        learn.learnCategory === 'Beginner'
+                                            ? "bg-[url('src/assets/home.jpg')] bg-cover bg-center bg-no-repeat"
+                                            : learn.learnCategory === 'Intermediate'
+                                            ? "bg-[url('src/assets/img.jpg')] bg-cover bg-center bg-no-repeat"
+                                            : learn.learnCategory === 'Advanced'
+                                            ? "bg-[url('src/assets/image.jpeg')] bg-cover bg-center bg-no-repeat"
+                                            : 'bg-gray-200'
+                                    }`}
+                                >
+                                    <span className="text-gray-500"></span>
                                 </div>
                             )}
                             <h2 className="text-xl font-bold mb-2 text-gray-800 truncate">
                                 {learn.learnName}
                             </h2>
-                            <p className="text-gray-600  font-semibold text-sm mb-2">
-                                 {learn.learnCategory || 'Uncategorized'} 
+                            <p className="text-gray-600 font-semibold text-sm mb-2">
+                                {learn.learnCategory || 'Uncategorized'} Level
                             </p>
                             <p className="text-gray-400 text-base line-clamp-2 mb-4">
                                 {learn.learnDescription || 'No description'}

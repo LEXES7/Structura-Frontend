@@ -94,19 +94,27 @@ export default function AddCourse() {
                     <form onSubmit={handleSubmit} className="space-y-5">
                         {/* Course Name */}
                         <div>
-                            <Label htmlFor="courseName" value="Course Title" className="text-gray-700 font-medium" />
-                            <TextInput
-                                id="courseName"
-                                name="courseName"
-                                value={formData.courseName}
-                                onChange={handleChange}
-                                placeholder="Lesson Name"
-                                required
-                                icon={HiBookOpen}
-                                className="mt-1"
-                                color={formData.courseName.trim() ? 'success' : 'gray'}
-                            />
-                        </div>
+    <Label htmlFor="courseName" value="Course Title" className="text-gray-700 font-medium" />
+    <TextInput
+        id="courseName"
+        name="courseName"
+        value={formData.courseName}
+        onChange={(e) => {
+            const value = e.target.value;
+            if (/^[a-zA-Z0-9\s]*$/.test(value)) {
+                handleChange(e); // Update the state only if the input is valid
+            }
+        }}
+        placeholder="Lesson Name"
+        required
+        icon={HiBookOpen}
+        className="mt-1"
+        color={formData.courseName.trim() ? 'success' : 'gray'}
+    />
+    {!/^[a-zA-Z0-9\s]*$/.test(formData.courseName) && (
+        <p className="text-sm text-red-500 mt-1">Symbols are not allowed. Please use only letters, numbers, and spaces.</p>
+    )}
+</div>
 
                         {/* PDF Upload */}
                         <div>

@@ -186,7 +186,7 @@ export default function DisplayLearns({ isDashboard = false }) {
                         <img
                             src={editFormData.learnImg && editFormData.learnImg !== 'default.png' 
                                 ? `http://localhost:8080${editFormData.learnImg}` 
-                                : 'https://placehold.co/150x150'}
+                                : ''}
                             alt="Current"
                             className="w-full h-32 object-cover rounded"
                         />
@@ -221,7 +221,7 @@ export default function DisplayLearns({ isDashboard = false }) {
                             />
                         ) : (
                             <div className="w-full h-48 bg-gray-200 flex items-center justify-center mb-4">
-                                <span className="text-gray-500">No Image</span>
+                                <span className="text-gray-500"></span>
                             </div>
                         )}
                         <h2 className="text-xl font-semibold mb-2 text-gray-800 truncate">{learn.learnName}</h2>

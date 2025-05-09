@@ -7,6 +7,7 @@ import DashSidebar from '../components/DashSidebar';
 import ShowUsers from '../components/admin/showusers';
 import ShowPosts from '../components/admin/showposts';
 import ShowLearn from '../components/admin/showlearn';
+import ShowLesson from '../components/admin/showlesson';
 
 export default function Admindash() {
   const { currentUser } = useSelector((state) => state.user);
@@ -91,6 +92,15 @@ export default function Admindash() {
             <HiAcademicCap className="inline mr-2" /> Courses
           </button>
           <button
+            className={`px-4 py-2 ${activeTab === 'lessons' ? 'border-b-2 border-blue-600 text-blue-600' : ''}`}
+            onClick={() => {
+              setActiveTab('courses');
+              navigate('/admin-dashboard', { state: { activeTab: 'lessons' }, replace: true });
+            }}
+          >
+            <HiAcademicCap className="inline mr-2" /> Lessons
+          </button>
+          <button
             className={`px-4 py-2 ${activeTab === 'posts' ? 'border-b-2 border-blue-600 text-blue-600' : ''}`}
             onClick={() => {
               setActiveTab('posts');
@@ -105,6 +115,7 @@ export default function Admindash() {
         <div className="bg-white rounded-lg shadow">
           {activeTab === 'users' && <ShowUsers searchTerm={searchTerm} />}
           {activeTab === 'courses' && <ShowLearn searchTerm={searchTerm} />}
+          {activeTab === 'lessons' && <ShowLesson searchTerm={searchTerm} />}
           {activeTab === 'posts' && <ShowPosts searchTerm={searchTerm} />}
         </div>
       </div>
