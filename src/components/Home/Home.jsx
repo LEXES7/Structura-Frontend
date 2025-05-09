@@ -4,12 +4,15 @@ import { Badge } from 'flowbite-react';
 import homeImage from '../../assets/home.jpg';
 import featureImage from '../../assets/img.jpg';
 
+import featureImageh1 from '../../assets/homepic1.jpeg';
+import featureImageh2 from '../../assets/homepic2.jpeg';
+
 import feature1Image from '../../assets/sketch.jpg';
 import feature2Image from '../../assets/house1.jpg';
 import feature3Image from '../../assets/sketch3.jpg';
+import feature4Image from '../../assets/AI.jpg';
 import feature5Image from '../../assets/sketch1.jpg';
 import feature6Image from '../../assets/house2.jpg';
-
 
 const features = [
   {
@@ -27,7 +30,11 @@ const features = [
       description: 'Receive constructive feedback from industry experts on your posts.',
       image: feature3Image,
   },
-
+  {
+      title: 'AI Assistant',
+      description: 'Explore AI-driven tools for design suggestions and project management.',
+      image: feature4Image,
+  },
   {
       title: 'Community Forums',
       description: 'Engage with a global community of architects and learners through forums.',
@@ -147,6 +154,48 @@ export default function Home() {
                         <p className="text-lg mb-6">
                             Our educational approach blends architectural appreciation with hands-on skill-building. Explore iconic structures through 3D rendering and drawing courses, and deepen your expertise by studying architectural marvels and industry giants.
                         </p>
+                        <button className="px-6 py-3 border border-black text-black font-semibold rounded-full hover:bg-black hover:text-white transition">
+                            Join Us
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div className="relative w-full bg-gray-700 h-auto flex flex-col items-center justify-center text-white px-6 py-10">
+                <div className="flex flex-col md:flex-row items-center max-w-6xl w-full gap-10">
+                    <div className="w-full md:w-1/2 text-left gap-4 md:pr-10 order-2 md:order-1">
+                        <h2 className="text-3xl font-bold mb-4">Innovative Urban Architecture</h2>
+                        <p className="text-lg mb-6">
+Modern skyscraper with sleek glass facades and integrated green terraces, symbolizing sustainable design and architectural innovation. The building's unique structural features, such as its vertical gardens and expansive windows, reflect cutting-edge techniques in urban development. Ideal for inspiring learners and professionals at Structura to explore advanced 3D rendering and eco-friendly architectural practices.
+                        </p>
+                        <button className="px-6 py-3 border border-white text-white font-semibold rounded-full hover:bg-black hover:text-white transition">
+                            Join Us
+                        </button>
+                    </div>
+                    <div className="w-full md:w-1/2 relative -mr-10 order-1 md:order-2">
+                        <img
+                            src={featureImageh2}
+                            alt="Feature"
+                            className="rounded-2xl shadow-lg w-full"
+                        />
+                    </div>
+                </div>
+            </div>
+
+
+                        <div className="relative w-full bg-white h-auto flex flex-col items-center justify-center text-black px-6 py-10">
+                <div className="flex flex-col md:flex-row items-center max-w-6xl w-full gap-10">
+                    <div className="w-full md:w-1/2 relative -ml-10">
+                        <img
+                            src={featureImageh1}
+                            alt="Feature"
+                            className="rounded-2xl shadow-lg w-full"
+                        />
+                    </div>
+                    <div className="w-full md:w-1/2 text-left gap-4 md:pl-10">
+                        <h2 className="text-3xl font-bold mb-4">Timeless Architectural Heritage</h2>
+                        <p className="text-lg mb-6">
+ classic historical building adorned with ornate facades, detailed columns, and intricate sculptures, representing the rich legacy of architectural artistry. Perfect for Structura's community to study and appreciate iconic structures, this image invites users to deepen their expertise through drawing courses and historical analysis of industry giants.                        </p>
                         <button className="px-6 py-3 border border-black text-black font-semibold rounded-full hover:bg-black hover:text-white transition">
                             Join Us
                         </button>

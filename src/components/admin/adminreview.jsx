@@ -1,9 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { HiTrash, HiSearch, HiStar, HiX } from 'react-icons/hi';
-import { Button, TextInput, Modal, Spinner, Alert } from 'flowbite-react';
 import { useSelector } from 'react-redux';
 import axios from 'axios';
-import { formatDistance } from 'date-fns';
+import { FaTrash, FaStar, FaCalendarAlt, FaUser, FaFilter } from 'react-icons/fa';
 
 export default function AdminReview({ searchTerm = '' }) {
   const { currentUser } = useSelector((state) => state.user);
@@ -13,26 +11,26 @@ export default function AdminReview({ searchTerm = '' }) {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [reviewToDelete, setReviewToDelete] = useState(null);
   const [deleteSuccess, setDeleteSuccess] = useState('');
-  const [filter, setFilter] = useState('all'); // 'all', 'highest', 'lowest'
+  const [filter, setFilter] = useState('all');
   const [localSearchTerm, setLocalSearchTerm] = useState(searchTerm);
 
   // Fetch all reviews
   useEffect(() => {
+    if (!currentUser?.isAdmin) return;
+
     const fetchReviews = async () => {
-      if (!currentUser?.isAdmin) return;
-      
-      setLoading(true);
       try {
+        setLoading(true);
         const response = await axios.get('http://localhost:8080/api/reviews', {
           headers: {
             Authorization: `Bearer ${currentUser.token}`
           }
         });
-        setReviews(response.data);
+        setReviews(response.data || []);
         setError(null);
       } catch (err) {
         console.error('Error fetching reviews:', err);
-        setError(err.response?.data?.message || 'Failed to fetch reviews. Please try again.');
+        setError('Failed to load reviews. Please try again later.');
       } finally {
         setLoading(false);
       }
@@ -54,11 +52,15 @@ export default function AdminReview({ searchTerm = '' }) {
     if (!reviewToDelete || !currentUser?.isAdmin) return;
     
     try {
-      await axios.delete(`http://localhost:8080/api/reviews/${reviewToDelete._id || reviewToDelete.id}`, {
+      // Make sure we're using the correct ID property (MongoDB uses _id)
+      const reviewId = reviewToDelete._id || reviewToDelete.id;
+      
+      await axios.delete(`http://localhost:8080/api/reviews/${reviewId}`, {
         headers: { Authorization: `Bearer ${currentUser.token}` }
       });
       
-      setReviews(prev => prev.filter(r => (r._id || r.id) !== (reviewToDelete._id || reviewToDelete.id)));
+      // Update the state to remove the deleted review
+      setReviews(prev => prev.filter(r => (r._id || r.id) !== reviewId));
       setDeleteSuccess(`Review from ${reviewToDelete.name} deleted successfully`);
       
       // Clear success message after 3 seconds
@@ -79,212 +81,191 @@ export default function AdminReview({ searchTerm = '' }) {
 
   // Get filtered and sorted reviews
   const getFilteredReviews = () => {
-    // First filter by search term if any
-    let filtered = reviews;
-    
-    if (localSearchTerm.trim()) {
-      const term = localSearchTerm.toLowerCase();
-      filtered = filtered.filter(review => 
-        review.name.toLowerCase().includes(term) || 
-        review.description.toLowerCase().includes(term)
-      );
-    }
-    
-    // Then apply sorting based on filter
-    switch (filter) {
-      case 'highest':
-        return [...filtered].sort((a, b) => b.rating - a.rating);
-      case 'lowest':
-        return [...filtered].sort((a, b) => a.rating - b.rating);
-      case 'newest':
-        return [...filtered].sort((a, b) => 
-          new Date(b.createdAt || b.date) - new Date(a.createdAt || a.date));
-      case 'oldest':
-        return [...filtered].sort((a, b) => 
-          new Date(a.createdAt || a.date) - new Date(b.createdAt || b.date));
-      default: // 'all'
-        return filtered;
-    }
+    return reviews
+      .filter(review => {
+        // Apply search filter
+        if (localSearchTerm) {
+          const searchLower = localSearchTerm.toLowerCase();
+          return (
+            review.name?.toLowerCase().includes(searchLower) ||
+            review.description?.toLowerCase().includes(searchLower)
+          );
+        }
+        return true;
+      })
+      .filter(review => {
+        // Apply rating filter
+        if (filter === 'all') return true;
+        if (filter === '5star') return review.rating === 5;
+        if (filter === '4star') return review.rating === 4;
+        if (filter === '3star') return review.rating === 3;
+        if (filter === 'low') return review.rating < 3;
+        return true;
+      });
   };
   
   // Format date as "X days ago"
   const formatDate = (dateString) => {
-    try {
-      return formatDistance(new Date(dateString), new Date(), { addSuffix: true });
-    } catch (err) {
-      return 'some time ago';
+    if (!dateString) return 'Unknown date';
+    
+    const reviewDate = new Date(dateString);
+    const now = new Date();
+    const diffTime = Math.abs(now - reviewDate);
+    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+    
+    if (diffDays === 0) {
+      return 'Today';
+    } else if (diffDays === 1) {
+      return 'Yesterday';
+    } else if (diffDays < 30) {
+      return `${diffDays} days ago`;
+    } else if (diffDays < 365) {
+      const months = Math.floor(diffDays / 30);
+      return `${months} ${months === 1 ? 'month' : 'months'} ago`;
+    } else {
+      return reviewDate.toLocaleDateString();
     }
   };
 
+  const filteredReviews = getFilteredReviews();
+
   if (loading) {
     return (
-      <div className="flex items-center justify-center p-8">
-        <Spinner size="xl" />
+      <div className="flex justify-center items-center h-64">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
       </div>
     );
   }
 
-  const filteredReviews = getFilteredReviews();
-  
   return (
-    <div className="p-6">
-      <div className="mb-6 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
-        <h2 className="text-xl font-semibold">
-          Review Management 
-          <span className="ml-2 text-sm font-normal text-gray-500">
-            ({filteredReviews.length} reviews)
-          </span>
-        </h2>
-        
-        <div className="flex flex-col sm:flex-row gap-3">
-          <TextInput
-            icon={HiSearch}
-            placeholder="Search reviews..."
-            value={localSearchTerm}
-            onChange={(e) => setLocalSearchTerm(e.target.value)}
-            className="w-full sm:w-64"
-          />
-          
-          <select
-            className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-            value={filter}
-            onChange={(e) => setFilter(e.target.value)}
-          >
-            <option value="all">All Reviews</option>
-            <option value="highest">Highest Rated</option>
-            <option value="lowest">Lowest Rated</option>
-            <option value="newest">Newest First</option>
-            <option value="oldest">Oldest First</option>
-          </select>
-        </div>
+    <div className="p-4">
+      <div className="mb-6">
+        <h2 className="text-2xl font-bold text-gray-800 mb-2">Review Management</h2>
+        <p className="text-gray-600">
+          Manage customer reviews and testimonials
+        </p>
       </div>
-      
+
       {error && (
-        <Alert color="failure" className="mb-4">
+        <div className="p-4 mb-4 text-sm text-red-700 bg-red-100 rounded-lg" role="alert">
           {error}
-        </Alert>
+        </div>
       )}
-      
+
       {deleteSuccess && (
-        <Alert color="success" className="mb-4">
+        <div className="p-4 mb-4 text-sm text-green-700 bg-green-100 rounded-lg" role="alert">
           {deleteSuccess}
-        </Alert>
+        </div>
       )}
-      
-      {/* Reviews Table */}
-      <div className="overflow-x-auto relative shadow-md sm:rounded-lg">
-        <div className="max-h-[70vh] overflow-y-auto">
-          <table className="w-full text-sm text-left text-gray-500 dark:text-gray-400">
-            <thead className="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400 sticky top-0 z-10">
-              <tr>
-                <th scope="col" className="px-6 py-3">Reviewer</th>
-                <th scope="col" className="px-6 py-3">Rating</th>
-                <th scope="col" className="px-6 py-3">Review</th>
-                <th scope="col" className="px-6 py-3">Date</th>
-                <th scope="col" className="px-6 py-3">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredReviews.length > 0 ? (
-                filteredReviews.map((review) => (
-                  <tr 
-                    key={review._id || review.id} 
-                    className="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600"
-                  >
-                    <td className="px-6 py-4 whitespace-nowrap font-medium text-gray-900 dark:text-white">
-                      {review.name}
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="flex items-center">
-                        <div className="flex">
-                          {[...Array(5)].map((_, i) => (
-                            <HiStar
-                              key={i}
-                              className={i < review.rating ? "text-yellow-400" : "text-gray-300"}
-                            />
-                          ))}
-                        </div>
-                        <span className="ml-2">{review.rating}/5</span>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="max-w-xs lg:max-w-md truncate">
-                        {review.description}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      {formatDate(review.createdAt || review.date)}
-                    </td>
-                    <td className="px-6 py-4">
-                      <Button 
-                        size="xs" 
-                        color="failure"
-                        onClick={() => handleDeleteClick(review)}
-                      >
-                        <HiTrash className="mr-2" /> Delete
-                      </Button>
-                    </td>
-                  </tr>
-                ))
-              ) : (
-                <tr>
-                  <td colSpan={5} className="px-6 py-4 text-center text-gray-500">
-                    {localSearchTerm 
-                      ? "No reviews match your search criteria" 
-                      : "No reviews found in the database"}
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
+
+      <div className="mb-4">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <div className="w-full md:w-1/3">
+            <label className="sr-only">Search</label>
+            <input
+              type="text"
+              className="w-full p-2 border border-gray-300 rounded-lg"
+              placeholder="Search by name or content..."
+              value={localSearchTerm}
+              onChange={(e) => setLocalSearchTerm(e.target.value)}
+            />
+          </div>
+          
+          <div className="flex items-center">
+            <FaFilter className="mr-2 text-gray-600" />
+            <select
+              className="p-2 border border-gray-300 rounded-lg"
+              value={filter}
+              onChange={(e) => setFilter(e.target.value)}
+            >
+              <option value="all">All Ratings</option>
+              <option value="5star">5 Stars</option>
+              <option value="4star">4 Stars</option>
+              <option value="3star">3 Stars</option>
+              <option value="low">&lt; 3 Stars</option>
+            </select>
+          </div>
         </div>
       </div>
-      
+
+      <div className="mb-4">
+        <span className="inline-block bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded">
+          {filteredReviews.length} Reviews
+        </span>
+      </div>
+
+      {filteredReviews.length > 0 ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {filteredReviews.map((review) => (
+            <div key={review._id || review.id} className="bg-white p-4 rounded-lg shadow">
+              <div className="flex justify-between items-start">
+                <div>
+                  <div className="flex items-center mb-2">
+                    <FaUser className="mr-2 text-gray-600" />
+                    <h3 className="text-lg font-medium">{review.name}</h3>
+                  </div>
+                  <div className="flex items-center mb-3">
+                    {[...Array(5)].map((_, i) => (
+                      <FaStar
+                        key={i}
+                        className={i < review.rating ? "text-yellow-400" : "text-gray-300"}
+                      />
+                    ))}
+                  </div>
+                </div>
+                <button
+                  className="bg-red-600 text-white p-1 rounded hover:bg-red-700"
+                  onClick={() => handleDeleteClick(review)}
+                >
+                  <FaTrash />
+                </button>
+              </div>
+              
+              <div className="bg-gray-50 p-3 rounded-md mb-3">
+                <p className="text-gray-700 italic">"{review.description}"</p>
+              </div>
+              
+              <div className="flex items-center text-sm text-gray-500">
+                <FaCalendarAlt className="mr-1" />
+                <span>{formatDate(review.createdAt)}</span>
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div className="text-center py-12 bg-gray-50 rounded-lg">
+          <p className="text-gray-500">No reviews found matching your criteria.</p>
+        </div>
+      )}
+
       {/* Delete Confirmation Modal */}
       {showDeleteModal && (
-        <Modal show={showDeleteModal} onClose={cancelDelete}>
-          <Modal.Header>
-            Confirm Delete Review
-          </Modal.Header>
-          <Modal.Body>
-            <div className="space-y-4">
-              <p>Are you sure you want to delete this review from <b>{reviewToDelete?.name}</b>?</p>
-              
-              {reviewToDelete && (
-                <div className="mt-2 p-4 bg-gray-50 rounded-lg dark:bg-gray-700">
-                  <div className="flex items-center mb-2">
-                    <div className="flex">
-                      {[...Array(5)].map((_, i) => (
-                        <HiStar
-                          key={i}
-                          className={i < reviewToDelete.rating ? "text-yellow-400" : "text-gray-300"}
-                        />
-                      ))}
-                    </div>
-                    <span className="ml-2 text-sm text-gray-500 dark:text-gray-400">
-                      {formatDate(reviewToDelete.createdAt || reviewToDelete.date)}
-                    </span>
-                  </div>
-                  <p className="text-gray-600 dark:text-gray-300 italic">
-                    "{reviewToDelete.description}"
-                  </p>
-                </div>
-              )}
-              
-              <p className="text-red-600 dark:text-red-400">
-                This action cannot be undone!
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-lg shadow-xl max-w-lg w-full">
+            <h3 className="text-lg font-semibold mb-4">Confirm Delete</h3>
+            <div className="text-center sm:text-left">
+              <p className="mb-4">Are you sure you want to delete this review from <strong>{reviewToDelete?.name}</strong>?</p>
+              <p className="text-gray-600 bg-gray-100 p-3 rounded italic mb-4">
+                "{reviewToDelete?.description?.substring(0, 100)}{reviewToDelete?.description?.length > 100 ? '...' : ''}"
               </p>
+              <p className="text-red-600 font-medium">This action cannot be undone.</p>
             </div>
-          </Modal.Body>
-          <Modal.Footer>
-            <Button color="failure" onClick={confirmDelete}>
-              Yes, Delete Review
-            </Button>
-            <Button color="gray" onClick={cancelDelete}>
-              Cancel
-            </Button>
-          </Modal.Footer>
-        </Modal>
+            <div className="mt-5 flex justify-end gap-2">
+              <button 
+                className="px-4 py-2 bg-gray-300 text-gray-800 rounded hover:bg-gray-400" 
+                onClick={cancelDelete}
+              >
+                Cancel
+              </button>
+              <button 
+                className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700" 
+                onClick={confirmDelete}
+              >
+                Delete Review
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
