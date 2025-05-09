@@ -13,6 +13,7 @@ export default function showlearn({ isDashboard = false }) {
         learnName: '',
         learnCategory: '',
         learnDescription: '',
+        learnImg: '',
     });
     const [newImage, setNewImage] = useState(null);
     const { currentUser } = useSelector((state) => state.user);
@@ -43,15 +44,9 @@ export default function showlearn({ isDashboard = false }) {
             learnName: learn.learnName || '',
             learnCategory: learn.learnCategory || '',
             learnDescription: learn.learnDescription || '',
-
-        
-          });
-
-        
-        
+            learnImg: learn.learnImg || '',
+        });
         setNewImage(null);
-
-
     };
 
     const handleEditChange = (e) => {
@@ -126,32 +121,28 @@ export default function showlearn({ isDashboard = false }) {
     }
 
     return (
-        <div className="container mx-auto px-4 py-8 bg-[url('src/assets/home.jpg')] bg-cover bg-center bg-no-repeat">
+        <div className="container mx-auto px-4 py-8">
             {error && (
                 <div className="mb-4 p-4 bg-red-100 text-red-700 rounded-lg">
                     {error}
                 </div>
             )}
             
-           {/* Main Content */}
-<div className="flex-1 p-6">
-  <div className="flex justify-between items-center">
-  <div>
-                        <h1 className="text-3xl font-bold text-white">Courses</h1>
-                        <p className="mt-4 text-white">
-                            {isDashboard ? 'View and manage your courses.' : 'Explore all available courses.'}
-                        </p>
+            {/* Main Content */}
+            <div className="flex-1 p-6">
+                <div className="flex justify-between items-center">
+                    <div>
+                        <h1 className="text-2xl font-bold text-black">Course Management</h1>
                     </div>
-    <Button color="green" onClick={handleAddLearn} className="ml-4">
-      + Add Course
-    </Button>
-  </div>
-</div>
+                    <Button color="green" onClick={handleAddLearn} className="ml-4">
+                        + Add Course
+                    </Button>
+                </div>
+            </div>
 
             {editingLearnId && (
                 <div className="mb-8 p-6 bg-gray-100 rounded-lg shadow-md">
                     <h2 className="text-2xl font-bold mb-4">Edit Course</h2>
-                    
                     <div className="mb-4">
                         <Label htmlFor="learnName" value="Learn Title" />
                         <TextInput
@@ -172,9 +163,9 @@ export default function showlearn({ isDashboard = false }) {
                             required
                         >
                             <option value="" disabled>Select a category</option>
-                            <option value="Beginner">Beginner</option>
-                            <option value="Intermediate">Intermediate</option>
-                            <option value="Advanced">Advanced</option>
+                            <option value="Beginner">Beginner Level</option>
+                            <option value="Intermediate">Intermediate Level</option>
+                            <option value="Advanced">Advanced Level</option>
                         </Select>
                     </div>
                     <div className="mb-4">
@@ -193,7 +184,7 @@ export default function showlearn({ isDashboard = false }) {
                         <img
                             src={editFormData.learnImg && editFormData.learnImg !== 'default.png' 
                                 ? `http://localhost:8080${editFormData.learnImg}` 
-                                : ''}
+                                : 'https://placehold.co/150x150'}
                             alt="Current"
                             className="w-full h-32 object-cover rounded"
                         />
@@ -221,18 +212,25 @@ export default function showlearn({ isDashboard = false }) {
                     <div key={learn.id} className="bg-white rounded-lg shadow-md p-4">
                         {learn.learnImg && learn.learnImg !== 'default.png' ? (
                             <img
-                                className="w-full h-48 object-cover mb-4"
+                                className="w-full h-48 object-cover mb-4 rounded"
                                 src={`http://localhost:8080${learn.learnImg}`}
                                 alt={learn.learnName}
                                 onError={(e) => (e.target.src = 'https://placehold.co/150x150')}
                             />
                         ) : (
-                            <div className="w-full h-48 bg-gray-200 flex items-center justify-center mb-4">
-                                <span className="text-gray-500"></span>
-                            </div>
+                            <div
+                                className={`w-full h-48 mb-4 rounded flex items-center justify-center 
+                                    ${learn.learnCategory === 'Beginner' 
+                                        ? 'bg-[url("src/assets/home.jpg")] bg-cover bg-center bg-no-repeat' 
+                                        : learn.learnCategory === 'Intermediate' 
+                                        ? 'bg-[url("src/assets/img.jpg")] bg-cover bg-center bg-no-repeat' 
+                                        : learn.learnCategory === 'Advanced' 
+                                        ? 'bg-[url("src/assets/image.jpeg")] bg-cover bg-center bg-no-repeat' 
+                                        : 'bg-gray-200'}`}
+                            />
                         )}
-                        <h2 className="text-xl font-semibold mb-2 text-gray-800 truncate">{learn.learnName}</h2>
-                        <p className="text-gray-600 text-sm mb-2">Category: {learn.learnCategory || 'Uncategorized'}</p>
+                        <h3 className="text-xl font-semibold mb-2 text-gray-800 truncate">{learn.learnName}</h3>
+                        <p className="text-gray-600 text-sm mb-2">{learn.learnCategory || 'Uncategorized'} Level</p>
                         <p className="text-gray-700 text-base line-clamp-2 mb-4">{learn.learnDescription || 'No description'}</p>
                         <div className="flex space-x-2">
                             <Button color="blue" size="sm" className="flex-1" onClick={() => handleEditClick(learn)}>Edit</Button>
