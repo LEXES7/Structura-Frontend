@@ -7,7 +7,6 @@ import featureImage from '../../assets/img.jpg';
 import feature1Image from '../../assets/sketch.jpg';
 import feature2Image from '../../assets/house1.jpg';
 import feature3Image from '../../assets/sketch3.jpg';
-import feature4Image from '../../assets/AI.jpg';
 import feature5Image from '../../assets/sketch1.jpg';
 import feature6Image from '../../assets/house2.jpg';
 
@@ -28,11 +27,7 @@ const features = [
       description: 'Receive constructive feedback from industry experts on your posts.',
       image: feature3Image,
   },
-  {
-      title: 'AI Assistant',
-      description: 'Explore AI-driven tools for design suggestions and project management.',
-      image: feature4Image,
-  },
+
   {
       title: 'Community Forums',
       description: 'Engage with a global community of architects and learners through forums.',

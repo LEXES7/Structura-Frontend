@@ -14,7 +14,7 @@ import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { AiOutlineSearch } from 'react-icons/ai';
 import { useSelector, useDispatch } from 'react-redux';
-import { signoutSuccess } from '../redux/userSlice';
+import Faq from '../pages/faq';
 
 export default function Header() {
   const path = useLocation().pathname;
@@ -60,6 +60,9 @@ export default function Header() {
           </Link>
           <Link to="/features" className="text-white hover:text-gray-300">
             Features
+          </Link>
+          <Link to="/faq" className="text-white hover:text-gray-300">
+            FAQ
           </Link>
         </div>
         <form className="relative hidden lg:block w-1/3">

@@ -28,11 +28,6 @@ const features = [
         image: feature3Image,
     },
     {
-        title: 'AI Assistant',
-        description: 'Explore AI-driven tools for design suggestions and project management.',
-        image: feature4Image,
-    },
-    {
         title: 'Community Forums',
         description: 'Engage with a global community of architects and learners through forums.',
         image: feature5Image,

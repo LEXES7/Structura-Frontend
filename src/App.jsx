@@ -24,6 +24,7 @@ import AdminRoute from './components/AdminRoute';
 import PostPage from './pages/PostPage';
 import AboutUs from './pages/About';
 import AdminProfile from './pages/AdminProfile';
+import Faq from './pages/faq';
 
 export default function App() {
   return (
@@ -42,6 +43,7 @@ export default function App() {
           <Route path="/signup" element={<Signup />} />
           <Route path="/oauth-callback" element={<OAuthCallback />} />
           <Route path="/post/:postId" element={<PostPage />} />
+          <Route path="/faq" element={<Faq />} />
           <Route path="/home" element={<Home />} />
           <Route path="/displaypost" element={<Displaypost />} /> {/* Moved from private routes */}
           
