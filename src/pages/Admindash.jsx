@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useSelector } from 'react-redux';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { TextInput, Spinner } from 'flowbite-react';
-import { HiUsers, HiAcademicCap, HiDocumentText, HiSearch, HiStar } from 'react-icons/hi';
+import { HiUsers, HiAcademicCap, HiDocumentText, HiSearch, HiStar, HiCalendar } from 'react-icons/hi';
 import DashSidebar from '../components/DashSidebar';
 import ShowUsers from '../components/admin/showusers';
 import ShowPosts from '../components/admin/showposts';
@@ -11,10 +11,12 @@ import ShowLesson from '../components/admin/showlesson';
 import DisplayCourses from '../components/DisplayCourses/DisplayCourses';
 import AdminReview from '../components/admin/adminreview';
 import AdminLanding from '../components/admin/adminlanding';
+import AddEventForm from '../components/Addevents/AddEventForm';
+import EventCalendar from '../components/DisplayEvents/EventCalendar';
 
 export default function Admindash() {
   const { currentUser } = useSelector((state) => state.user);
-  const [activeTab, setActiveTab] = useState('users');
+  const [activeTab, setActiveTab] = useState('overview');
   const [searchTerm, setSearchTerm] = useState('');
   const navigate = useNavigate();
   const location = useLocation();
@@ -30,7 +32,7 @@ export default function Admindash() {
     const params = new URLSearchParams(location.search);
     const tabFromUrl = params.get('tab');
     
-    if (tabFromUrl && ['overview', 'users', 'courses', 'lessons', 'posts', 'reviews'].includes(tabFromUrl)) {
+    if (tabFromUrl && ['overview', 'users', 'courses', 'lessons', 'posts', 'reviews', 'events', 'addevent'].includes(tabFromUrl)) {
       setActiveTab(tabFromUrl);
     } else if (location.state?.activeTab) {
       setActiveTab(location.state.activeTab);
@@ -65,8 +67,8 @@ export default function Admindash() {
     );
   }
 
-  // Only show search input when not on overview tab
-  const showSearchBar = activeTab !== 'overview';
+  // Only show search bar when not on overview tab and not on events or add event tab
+  const showSearchBar = activeTab !== 'overview' && activeTab !== 'events' && activeTab !== 'addevent';
 
   return (
     <div className="flex">
@@ -76,7 +78,7 @@ export default function Admindash() {
       <div className="flex-1 p-4 dark:bg-gray-800 bg-gray-100 min-h-screen">
         <h1 className="text-3xl font-bold mb-6 dark:text-white">Admin Dashboard</h1>
         
-        {/* Search Bar - only show when not on overview tab */}
+        {/* Search Bar */}
         {showSearchBar && (
           <div className="mb-6">
             <TextInput
@@ -126,6 +128,18 @@ export default function Admindash() {
           >
             <HiStar className="inline mr-2" /> Reviews
           </button>
+          <button
+            className={`px-4 py-2 whitespace-nowrap ${activeTab === 'events' ? 'border-b-2 border-blue-600 text-blue-600' : ''}`}
+            onClick={() => switchTab('events')}
+          >
+            <HiCalendar className="inline mr-2" /> Events
+          </button>
+          <button
+            className={`px-4 py-2 whitespace-nowrap ${activeTab === 'addevent' ? 'border-b-2 border-blue-600 text-blue-600' : ''}`}
+            onClick={() => switchTab('addevent')}
+          >
+            <HiCalendar className="inline mr-2" /> Add/Edit Event
+          </button>
         </div>
 
         {/* Content Area */}
@@ -136,6 +150,8 @@ export default function Admindash() {
           {activeTab === 'lessons' && <ShowLesson searchTerm={searchTerm} />}
           {activeTab === 'posts' && <ShowPosts searchTerm={searchTerm} />}
           {activeTab === 'reviews' && <AdminReview searchTerm={searchTerm} />}
+          {activeTab === 'events' && <EventCalendar isAdminView={true} />}
+          {activeTab === 'addevent' && <AddEventForm />}
         </div>
       </div>
     </div>

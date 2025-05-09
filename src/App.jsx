@@ -25,6 +25,7 @@ import PostPage from './pages/PostPage';
 import AboutUs from './pages/About';
 import AdminProfile from './pages/AdminProfile';
 import Faq from './pages/faq';
+import AddEventForm from './components/Addevents/AddEventForm';
 
 export default function App() {
   return (
@@ -45,7 +46,7 @@ export default function App() {
           <Route path="/post/:postId" element={<PostPage />} />
           <Route path="/faq" element={<Faq />} />
           <Route path="/home" element={<Home />} />
-          <Route path="/displaypost" element={<Displaypost />} /> {/* Moved from private routes */}
+          <Route path="/displaypost" element={<Displaypost />} />
           
           {/* Private routes for all authenticated users */}
           <Route element={<PrivateRoute />}>
@@ -63,6 +64,7 @@ export default function App() {
             <Route path="/addlearn" element={<Addlearn />} />
             <Route path="/addcourse" element={<AddCourse />} />
             <Route path="/editlearn/:learnId" element={<Addlearn />} />
+            <Route path="/addevent" element={<AddEventForm />} />
           </Route>
           
           {/* 404 route */}

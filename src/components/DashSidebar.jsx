@@ -13,7 +13,9 @@ import {
   HiOutlinePencil,
   HiOutlineUserCircle,
   HiOutlineStar,
-  HiOutlineBookOpen
+  HiOutlineBookOpen,
+  HiCalendar,
+  HiOutlinePlusCircle
 } from 'react-icons/hi';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
@@ -141,6 +143,14 @@ export default function DashSidebar() {
                 >
                   Create Post
                 </SidebarItem>
+                <SidebarItem 
+                  icon={HiCalendar} 
+                  as={Link} 
+                  to="/dashboard?tab=events"
+                  active={isActive('/dashboard?tab=events')}
+                >
+                  Event Calendar
+                </SidebarItem>
               </>
             )}
              
@@ -199,6 +209,29 @@ export default function DashSidebar() {
                   onClick={() => navigateToAdminTab('reviews')}
                 >
                   Manage Reviews
+                </SidebarItem>
+
+                {/* Events Management Section */}
+                <div className="pt-4 pb-2 px-4">
+                  <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                    EVENTS
+                  </p>
+                </div>
+
+                <SidebarItem 
+                  icon={HiOutlineCalendar} 
+                  active={isAdminTabActive('events')}
+                  onClick={() => navigateToAdminTab('events')}
+                >
+                  View Events
+                </SidebarItem>
+
+                <SidebarItem 
+                  icon={HiOutlinePlusCircle} 
+                  active={isAdminTabActive('addevent')}
+                  onClick={() => navigateToAdminTab('addevent')}
+                >
+                  Add/Edit Event
                 </SidebarItem>
               </>
             )}
