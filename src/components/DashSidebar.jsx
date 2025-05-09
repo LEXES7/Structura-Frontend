@@ -155,11 +155,8 @@ export default function DashSidebar() {
                 
                 <SidebarItem 
                   icon={HiOutlineChartPie}
-                  as={Link}
-                  to="/admin-dashboard" 
-                  active={location.pathname === '/admin-dashboard' && 
-                         (!location.search || 
-                          location.search === '?tab=overview')}
+                  active={isActive('/admin-dashboard') || isAdminTabActive('overview')}
+                  onClick={() => navigateToAdminTab('overview')}
                 >
                   Dashboard
                 </SidebarItem>

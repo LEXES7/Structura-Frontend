@@ -10,6 +10,7 @@ import ShowLearn from '../components/admin/showlearn';
 import ShowLesson from '../components/admin/showlesson';
 import DisplayCourses from '../components/DisplayCourses/DisplayCourses';
 import AdminReview from '../components/admin/adminreview';
+import AdminLanding from '../components/admin/adminlanding';
 
 export default function Admindash() {
   const { currentUser } = useSelector((state) => state.user);
@@ -25,20 +26,20 @@ export default function Admindash() {
       return;
     }
 
-    // Priority for URL parameters, then state, default to 'users'
+    // Priority for URL parameters, then state, default to 'overview'
     const params = new URLSearchParams(location.search);
     const tabFromUrl = params.get('tab');
     
-    if (tabFromUrl && ['users', 'courses', 'lessons', 'posts', 'reviews'].includes(tabFromUrl)) {
+    if (tabFromUrl && ['overview', 'users', 'courses', 'lessons', 'posts', 'reviews'].includes(tabFromUrl)) {
       setActiveTab(tabFromUrl);
     } else if (location.state?.activeTab) {
       setActiveTab(location.state.activeTab);
       // Update URL to match state for consistency
       navigate(`/admin-dashboard?tab=${location.state.activeTab}`, { replace: true });
     } else {
-      // Default tab
-      setActiveTab('users');
-      navigate('/admin-dashboard?tab=users', { replace: true });
+      // Default tab is now overview
+      setActiveTab('overview');
+      navigate('/admin-dashboard?tab=overview', { replace: true });
     }
   }, [currentUser, navigate, location]);
 
@@ -64,6 +65,9 @@ export default function Admindash() {
     );
   }
 
+  // Only show search input when not on overview tab
+  const showSearchBar = activeTab !== 'overview';
+
   return (
     <div className="flex">
       <div className="w-64">
@@ -72,44 +76,52 @@ export default function Admindash() {
       <div className="flex-1 p-4 dark:bg-gray-800 bg-gray-100 min-h-screen">
         <h1 className="text-3xl font-bold mb-6 dark:text-white">Admin Dashboard</h1>
         
-        {/* Search Bar */}
-        <div className="mb-6">
-          <TextInput
-            icon={HiSearch}
-            placeholder="Search..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-        </div>
+        {/* Search Bar - only show when not on overview tab */}
+        {showSearchBar && (
+          <div className="mb-6">
+            <TextInput
+              icon={HiSearch}
+              placeholder="Search..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
+        )}
 
         {/* Tab Navigation */}
-        <div className="flex border-b mb-4 dark:text-white">
+        <div className="flex border-b mb-4 dark:text-white overflow-x-auto">
           <button
-            className={`px-4 py-2 ${activeTab === 'users' ? 'border-b-2 border-blue-600 text-blue-600' : ''}`}
+            className={`px-4 py-2 whitespace-nowrap ${activeTab === 'overview' ? 'border-b-2 border-blue-600 text-blue-600' : ''}`}
+            onClick={() => switchTab('overview')}
+          >
+            <HiAcademicCap className="inline mr-2" /> Overview
+          </button>
+          <button
+            className={`px-4 py-2 whitespace-nowrap ${activeTab === 'users' ? 'border-b-2 border-blue-600 text-blue-600' : ''}`}
             onClick={() => switchTab('users')}
           >
             <HiUsers className="inline mr-2" /> Users
           </button>
           <button
-            className={`px-4 py-2 ${activeTab === 'courses' ? 'border-b-2 border-blue-600 text-blue-600' : ''}`}
+            className={`px-4 py-2 whitespace-nowrap ${activeTab === 'courses' ? 'border-b-2 border-blue-600 text-blue-600' : ''}`}
             onClick={() => switchTab('courses')}
           >
             <HiAcademicCap className="inline mr-2" /> Courses
           </button>
           <button
-            className={`px-4 py-2 ${activeTab === 'lessons' ? 'border-b-2 border-blue-600 text-blue-600' : ''}`}
+            className={`px-4 py-2 whitespace-nowrap ${activeTab === 'lessons' ? 'border-b-2 border-blue-600 text-blue-600' : ''}`}
             onClick={() => switchTab('lessons')}
           >
             <HiAcademicCap className="inline mr-2" /> Lessons
           </button>
           <button
-            className={`px-4 py-2 ${activeTab === 'posts' ? 'border-b-2 border-blue-600 text-blue-600' : ''}`}
+            className={`px-4 py-2 whitespace-nowrap ${activeTab === 'posts' ? 'border-b-2 border-blue-600 text-blue-600' : ''}`}
             onClick={() => switchTab('posts')}
           >
             <HiDocumentText className="inline mr-2" /> Posts
           </button>
           <button
-            className={`px-4 py-2 ${activeTab === 'reviews' ? 'border-b-2 border-blue-600 text-blue-600' : ''}`}
+            className={`px-4 py-2 whitespace-nowrap ${activeTab === 'reviews' ? 'border-b-2 border-blue-600 text-blue-600' : ''}`}
             onClick={() => switchTab('reviews')}
           >
             <HiStar className="inline mr-2" /> Reviews
@@ -118,6 +130,7 @@ export default function Admindash() {
 
         {/* Content Area */}
         <div className="rounded-lg shadow dark:text-white">
+          {activeTab === 'overview' && <AdminLanding />}
           {activeTab === 'users' && <ShowUsers searchTerm={searchTerm} />}
           {activeTab === 'courses' && <ShowLearn searchTerm={searchTerm} />}
           {activeTab === 'lessons' && <ShowLesson searchTerm={searchTerm} />}

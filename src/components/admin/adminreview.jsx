@@ -23,7 +23,7 @@ export default function AdminReview({ searchTerm = '' }) {
       
       setLoading(true);
       try {
-        const response = await axios.get('http://localhost:8080/api/reviews/all', {
+        const response = await axios.get('http://localhost:8080/api/reviews', {
           headers: {
             Authorization: `Bearer ${currentUser.token}`
           }
@@ -54,7 +54,7 @@ export default function AdminReview({ searchTerm = '' }) {
     if (!reviewToDelete || !currentUser?.isAdmin) return;
     
     try {
-      await axios.delete(`http://localhost:8080/api/reviews/delete/${reviewToDelete._id || reviewToDelete.id}`, {
+      await axios.delete(`http://localhost:8080/api/reviews/${reviewToDelete._id || reviewToDelete.id}`, {
         headers: { Authorization: `Bearer ${currentUser.token}` }
       });
       
