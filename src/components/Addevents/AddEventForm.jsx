@@ -31,7 +31,7 @@ class ErrorBoundary extends Component {
   }
 }
 
-const AddEventForm = ({ selectedDate, eventData, onEventChange }) => {
+const AddEventForm = ({ selectedDate, eventData: initialEventData, onEventChange }) => {
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -49,6 +49,7 @@ const AddEventForm = ({ selectedDate, eventData, onEventChange }) => {
   const [filterCategory, setFilterCategory] = useState('');
   const [filterStartDate, setFilterStartDate] = useState('');
   const [filterEndDate, setFilterEndDate] = useState('');
+  const [selectedEvent, setSelectedEvent] = useState(initialEventData || null);
 
   const { currentUser } = useSelector((state) => state.user || {});
   const token = currentUser?.token;
@@ -74,11 +75,11 @@ const AddEventForm = ({ selectedDate, eventData, onEventChange }) => {
     } catch (err) {
       console.error('Fetch Events Error:', {
         message: err.message,
-        response: err.response,
-        request: err.request,
-        config: err.config,
+        status: err.response?.status,
+        data: err.response?.data,
+        headers: err.response?.headers,
       });
-      setError('Failed to fetch events. Please check your network or try again.');
+      setError(`Failed to fetch events: ${err.response?.data?.message || err.message}`);
       setEvents([
         { id: 1, title: 'Mock Event 1', startTime: '2025-05-10T10:00:00Z', category: 'Meeting' },
         { id: 2, title: 'Mock Event 2', startTime: '2025-05-11T14:00:00Z', category: 'Workshop' },
@@ -90,14 +91,14 @@ const AddEventForm = ({ selectedDate, eventData, onEventChange }) => {
   // Initialize form with event data or selected date
   useEffect(() => {
     try {
-      if (eventData) {
+      if (selectedEvent) {
         setFormData({
-          title: eventData.title || '',
-          description: eventData.description || '',
-          startTime: eventData.startTime ? eventData.startTime.slice(0, 16) : '',
-          endTime: eventData.endTime ? eventData.endTime.slice(0, 16) : '',
-          zoomLink: eventData.zoomLink || '',
-          category: eventData.category || '',
+          title: selectedEvent.title || '',
+          description: selectedEvent.description || '',
+          startTime: selectedEvent.startTime ? new Date(selectedEvent.startTime).toISOString().slice(0, 16) : '',
+          endTime: selectedEvent.endTime ? new Date(selectedEvent.endTime).toISOString().slice(0, 16) : '',
+          zoomLink: selectedEvent.zoomLink || '',
+          category: selectedEvent.category || '',
         });
       } else if (selectedDate && selectedDate instanceof Date && !isNaN(selectedDate)) {
         const dateStr = selectedDate.toISOString().slice(0, 10);
@@ -123,7 +124,7 @@ const AddEventForm = ({ selectedDate, eventData, onEventChange }) => {
       console.error('Form Initialization Error:', err);
       setError('Error initializing form');
     }
-  }, [eventData, selectedDate]);
+  }, [selectedEvent, selectedDate]);
 
   // Fetch events on mount and when events change
   useEffect(() => {
@@ -157,10 +158,13 @@ const AddEventForm = ({ selectedDate, eventData, onEventChange }) => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    const formattedValue = name === 'startTime' || name === 'endTime' 
-      ? value + ':00'
-      : value;
-    setFormData({ ...formData, [name]: formattedValue });
+    setFormData({ ...formData, [name]: value });
+  };
+
+  const handleEdit = (event) => {
+    setSelectedEvent(event);
+    setError(null);
+    setSuccess(null);
   };
 
   const handleSubmit = async (e) => {
@@ -179,22 +183,26 @@ const AddEventForm = ({ selectedDate, eventData, onEventChange }) => {
     }
 
     try {
-      const payload = new URLSearchParams(formData).toString();
+      const payload = {
+        ...formData,
+        startTime: formData.startTime ? new Date(formData.startTime).toISOString() : '',
+        endTime: formData.endTime ? new Date(formData.endTime).toISOString() : '',
+      };
       let response;
-      if (eventData) {
+      if (selectedEvent) {
         response = await axios.put(
-          `/api/events/${eventData.id}`,
+          `/api/events/${selectedEvent._id || selectedEvent.id}`,
           payload,
           {
             headers: {
               Authorization: `Bearer ${token}`,
-              'Content-Type': 'application/x-www-form-urlencoded',
+              'Content-Type': 'application/json',
             },
             timeout: 10000,
           }
         );
         setSuccess('Event updated successfully!');
-        setEvents(events.map(e => e.id === eventData.id ? { ...e, ...formData } : e));
+        setEvents(events.map(e => (e._id || e.id) === (selectedEvent._id || selectedEvent.id) ? { ...e, ...payload } : e));
       } else {
         response = await axios.post(
           `/api/events`,
@@ -202,15 +210,15 @@ const AddEventForm = ({ selectedDate, eventData, onEventChange }) => {
           {
             headers: {
               Authorization: `Bearer ${token}`,
-              'Content-Type': 'application/x-www-form-urlencoded',
+              'Content-Type': 'application/json',
             },
             timeout: 10000,
           }
         );
         setSuccess('Event created successfully!');
         const newEvent = {
-          id: response.data.id || Date.now(),
-          ...formData,
+          _id: response.data._id || response.data.id || Date.now(),
+          ...payload,
         };
         setEvents([newEvent, ...events]);
       }
@@ -222,18 +230,16 @@ const AddEventForm = ({ selectedDate, eventData, onEventChange }) => {
         zoomLink: '',
         category: '',
       });
+      setSelectedEvent(null);
       if (onEventChange) onEventChange();
     } catch (err) {
       console.error('Axios Error:', {
         message: err.message,
-        response: err.response?.data,
         status: err.response?.status,
+        data: err.response?.data,
         headers: err.response?.headers,
       });
-      const errorMessage =
-        err.response?.data?.message ||
-        (err.message === 'Network Error' ? 'Unable to connect to the server. Please check your network or try again later.' : err.message) ||
-        'Failed to create event';
+      const errorMessage = err.response?.data?.message || err.message || 'Failed to save event';
       setError(errorMessage);
     } finally {
       setIsSubmitting(false);
@@ -241,27 +247,38 @@ const AddEventForm = ({ selectedDate, eventData, onEventChange }) => {
   };
 
   const handleDelete = async () => {
-    if (!eventData || !token) return;
+    if (!selectedEvent || !token) {
+      setError('No event selected or not authenticated');
+      return;
+    }
     setError(null);
     setSuccess(null);
     setIsSubmitting(true);
 
     try {
-      await axios.delete(`/api/events/${eventData.id}`, {
+      await axios.delete(`/api/events/${selectedEvent._id || selectedEvent.id}`, {
         headers: { Authorization: `Bearer ${token}` },
         timeout: 10000,
       });
       setSuccess('Event deleted successfully!');
-      setEvents(events.filter(e => e.id !== eventData.id));
+      setEvents(events.filter(e => (e._id || e.id) !== (selectedEvent._id || selectedEvent.id)));
+      setSelectedEvent(null);
+      setFormData({
+        title: '',
+        description: '',
+        startTime: '',
+        endTime: '',
+        zoomLink: '',
+        category: '',
+      });
       if (onEventChange) onEventChange();
     } catch (err) {
       console.error('Delete Error:', {
         message: err.message,
-        response: err.response?.data,
         status: err.response?.status,
+        data: err.response?.data,
       });
-      const errorMessage =
-        err.response?.data?.message || err.message || 'Failed to delete event';
+      const errorMessage = err.response?.data?.message || err.message || 'Failed to delete event';
       setError(errorMessage);
     } finally {
       setIsSubmitting(false);
@@ -277,6 +294,7 @@ const AddEventForm = ({ selectedDate, eventData, onEventChange }) => {
       zoomLink: '',
       category: '',
     });
+    setSelectedEvent(null);
     setError(null);
     setSuccess(null);
   };
@@ -298,7 +316,7 @@ const AddEventForm = ({ selectedDate, eventData, onEventChange }) => {
   };
 
   const generateReport = () => {
-    // Generating LaTeX document for PDF
+    console.log('Events for PDF:', filteredEvents);
     const latexContent = `
 \\documentclass{article}
 \\usepackage[utf8]{inputenc}
@@ -345,7 +363,6 @@ ${escapeLatex(event.category || '-')} \\\\`
     document.body.removeChild(link);
   };
 
-  // Fallback UI if component fails to load
   if (isLoading) {
     return (
       <motion.div
@@ -369,7 +386,6 @@ ${escapeLatex(event.category || '-')} \\\\`
       >
         <h2 className="text-2xl font-bold mb-4 text-gray-800">Events Overview</h2>
         <div className="mb-6">
-          {/* Search and Filters */}
           <motion.div 
             className="flex flex-col sm:flex-row gap-4 mb-4"
             initial={{ opacity: 0 }}
@@ -410,7 +426,6 @@ ${escapeLatex(event.category || '-')} \\\\`
               />
             </div>
           </motion.div>
-          {/* Report Generation Button */}
           <motion.div 
             className="mb-4"
             initial={{ opacity: 0 }}
@@ -424,7 +439,6 @@ ${escapeLatex(event.category || '-')} \\\\`
               Generate PDF Report
             </Button>
           </motion.div>
-          {/* Table */}
           {error && <p className="text-red-500 mb-4 bg-red-50 p-2 rounded">{error}</p>}
           <motion.div
             initial="hidden"
@@ -442,12 +456,13 @@ ${escapeLatex(event.category || '-')} \\\\`
                 <TableHeadCell className="bg-blue-500 text-white">Title</TableHeadCell>
                 <TableHeadCell className="bg-blue-500 text-white">Start Time</TableHeadCell>
                 <TableHeadCell className="bg-blue-500 text-white">Category</TableHeadCell>
+                <TableHeadCell className="bg-blue-500 text-white">Actions</TableHeadCell>
               </TableHead>
               <TableBody className="divide-y">
                 {filteredEvents.length > 0 ? (
                   filteredEvents.map((event, index) => (
                     <motion.tr
-                      key={event.id || index}
+                      key={event._id || event.id || index}
                       className={`${index % 2 === 0 ? 'bg-sky-50' : 'bg-amber-50'}`}
                       variants={{
                         hidden: { opacity: 0, y: 20 },
@@ -464,6 +479,15 @@ ${escapeLatex(event.category || '-')} \\\\`
                       <TableCell className="text-gray-600">
                         {event.category || 'None'}
                       </TableCell>
+                      <TableCell>
+                        <Button
+                          size="xs"
+                          className="bg-green-500 hover:bg-green-600"
+                          onClick={() => handleEdit(event)}
+                        >
+                          Edit
+                        </Button>
+                      </TableCell>
                     </motion.tr>
                   ))
                 ) : (
@@ -473,7 +497,7 @@ ${escapeLatex(event.category || '-')} \\\\`
                       visible: { opacity: 1, y: 0 },
                     }}
                   >
-                    <TableCell colSpan="3" className="text-center text-gray-600">
+                    <TableCell colSpan="4" className="text-center text-gray-600">
                       No events found
                     </TableCell>
                   </motion.tr>
@@ -484,7 +508,7 @@ ${escapeLatex(event.category || '-')} \\\\`
         </div>
 
         <h2 className="text-2xl font-bold mb-4 text-gray-800">
-          {eventData ? 'Edit Event' : 'Add New Event'}
+          {selectedEvent ? 'Edit Event' : 'Add New Event'}
         </h2>
         {error && <p className="text-red-500 mb-4">{error}</p>}
         {success && <p className="text-green-500 mb-4">{success}</p>}
@@ -572,14 +596,14 @@ ${escapeLatex(event.category || '-')} \\\\`
                 className="w-full bg-blue-500 hover:bg-blue-600" 
                 disabled={isSubmitting}
               >
-                {isSubmitting ? 'Submitting...' : eventData ? 'Update Event' : 'Add Event'}
+                {isSubmitting ? 'Submitting...' : selectedEvent ? 'Update Event' : 'Add Event'}
               </Button>
             </motion.div>
-            {eventData && (
+            {selectedEvent && (
               <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                 <Button
                   type="button"
-                  className="w-full bg-red-500 hover:bg-blue-600"
+                  className="w-full bg-red-500 hover:bg-red-600"
                   onClick={handleDelete}
                   disabled={isSubmitting}
                 >
