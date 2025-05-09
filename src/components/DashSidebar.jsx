@@ -73,6 +73,11 @@ export default function DashSidebar() {
     navigate(`/admin-dashboard?tab=${tabName}`, { state: { activeTab: tabName } });
   };
 
+  // Navigate to user dashboard with specific tab
+  const navigateToUserTab = (tabName) => {
+    navigate(`/dashboard?tab=${tabName}`, { replace: true });
+  };
+
   if (!currentUser) {
     return null;
   }
@@ -128,13 +133,21 @@ export default function DashSidebar() {
             {!isAdmin && (
               <>
                 <SidebarItem 
-                  icon={HiOutlineCalendar} 
-                  as={Link} 
-                  to="/dashboard?tab=displaypost"
+                  icon={HiOutlineChartPie} 
+                  active={isActive('/dashboard?tab=overview')}
+                  onClick={() => navigateToUserTab('overview')}
+                >
+                  Dashboard
+                </SidebarItem>
+
+                <SidebarItem 
+                  icon={HiOutlineDocumentText} 
                   active={isActive('/dashboard?tab=displaypost')}
+                  onClick={() => navigateToUserTab('displaypost')}
                 >
                   My Posts
                 </SidebarItem>
+
                 <SidebarItem 
                   icon={HiOutlinePencil} 
                   as={Link} 
@@ -143,11 +156,11 @@ export default function DashSidebar() {
                 >
                   Create Post
                 </SidebarItem>
+
                 <SidebarItem 
                   icon={HiCalendar} 
-                  as={Link} 
-                  to="/dashboard?tab=events"
                   active={isActive('/dashboard?tab=events')}
+                  onClick={() => navigateToUserTab('events')}
                 >
                   Event Calendar
                 </SidebarItem>

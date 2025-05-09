@@ -16,6 +16,7 @@ import Signin from './pages/Signin';
 import Signup from './pages/Signup';
 import Profile from './pages/Profile';
 import Dashboard from './pages/Dashboard';
+import UserLanding from './pages/userlanding';
 import Admindash from './pages/Admindash';
 import OAuthCallback from './components/OAuthCallback';
 import Header from './components/Header';

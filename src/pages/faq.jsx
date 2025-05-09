@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import { ChevronUp } from "lucide-react";
-import Footer from "../components/Footer";
 
 const faqData = [
     {
@@ -117,7 +116,6 @@ export default function Faq() {
                     </a>
                 </div>
             </div>
-            <Footer />
         </>
     );
 }
