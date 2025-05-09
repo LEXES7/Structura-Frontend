@@ -12,7 +12,8 @@ import {
   HiOutlineHome,
   HiOutlinePencil,
   HiOutlineUserCircle,
-  HiOutlineStar
+  HiOutlineStar,
+  HiOutlineBookOpen
 } from 'react-icons/hi';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
@@ -75,7 +76,7 @@ export default function DashSidebar() {
   }
 
   return (
-    <div className="h-full min-h-scree text-white">
+    <div className="h-full min-h-screen text-white">
       <Sidebar className="h-full">
         <SidebarItems>
           {/* User Profile Area */}
@@ -178,6 +179,14 @@ export default function DashSidebar() {
                 >
                   Manage Courses
                 </SidebarItem>
+
+                <SidebarItem 
+                  icon={HiOutlineBookOpen} 
+                  active={isAdminTabActive('lessons')}
+                  onClick={() => navigateToAdminTab('lessons')}
+                >
+                  Manage Lessons
+                </SidebarItem>
                 
                 <SidebarItem 
                   icon={HiOutlineDocumentText} 
@@ -194,8 +203,6 @@ export default function DashSidebar() {
                 >
                   Manage Reviews
                 </SidebarItem>
-                
-            
               </>
             )}
 
