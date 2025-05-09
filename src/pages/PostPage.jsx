@@ -1,9 +1,18 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
 import { useSelector } from 'react-redux';
-import { Button, Textarea, Badge } from 'flowbite-react';
-import { HiCalendar, HiLockClosed, HiThumbUp, HiShare, HiUsers } from 'react-icons/hi';
+import { Button, Textarea, Badge, Avatar } from 'flowbite-react';
+import { 
+    HiCalendar, 
+    HiLockClosed, 
+    HiThumbUp, 
+    HiShare, 
+    HiUsers, 
+    HiUser, 
+    HiOutlineClock,
+    HiOutlinePencil
+} from 'react-icons/hi';
 import postLogo from '../assets/postlogo.png';
 
 const formatDate = (dateString) => {
@@ -21,9 +30,37 @@ const formatDate = (dateString) => {
     }
 };
 
+// Format time elapsed since post creation
+const formatTimeAgo = (dateString) => {
+    if (!dateString) return '';
+    
+    try {
+        const date = new Date(dateString);
+        if (isNaN(date.getTime())) return '';
+        
+        const now = new Date();
+        const seconds = Math.floor((now - date) / 1000);
+        const minutes = Math.floor(seconds / 60);
+        const hours = Math.floor(minutes / 60);
+        const days = Math.floor(hours / 24);
+        const months = Math.floor(days / 30);
+        const years = Math.floor(months / 12);
+        
+        if (years > 0) return `${years} ${years === 1 ? 'year' : 'years'} ago`;
+        if (months > 0) return `${months} ${months === 1 ? 'month' : 'months'} ago`;
+        if (days > 0) return `${days} ${days === 1 ? 'day' : 'days'} ago`;
+        if (hours > 0) return `${hours} ${hours === 1 ? 'hour' : 'hours'} ago`;
+        if (minutes > 0) return `${minutes} ${minutes === 1 ? 'minute' : 'minutes'} ago`;
+        return `${seconds} ${seconds === 1 ? 'second' : 'seconds'} ago`;
+    } catch (err) {
+        return '';
+    }
+};
+
 export default function PostPage() {
     const { postId } = useParams();
     const [post, setPost] = useState(null);
+    const [author, setAuthor] = useState(null);
     const [comments, setComments] = useState([]);
     const [newComment, setNewComment] = useState('');
     const [editingCommentId, setEditingCommentId] = useState(null);
@@ -39,27 +76,48 @@ export default function PostPage() {
     const [shareUrl, setShareUrl] = useState('');
 
     const getImageUrl = (imgPath) => {
-        console.log("Processing image path:", imgPath);
         if (!imgPath || imgPath === 'default.png') {
-            console.log("Using default image");
             return postLogo;
         }
         if (imgPath.startsWith('http')) {
-            console.log("Using full URL:", imgPath);
             return imgPath;
         }
         const url = `${BASE_URL}${imgPath}`;
-        console.log("Constructed image URL:", url);
         return url;
+    };
+
+    const getInitial = (name) => {
+        if (!name) return '?';
+        return name.charAt(0).toUpperCase();
+    };
+
+    const getRandomColorClass = (userId) => {
+        const colors = [
+            'bg-blue-500',
+            'bg-green-500',
+            'bg-purple-500',
+            'bg-red-500',
+            'bg-yellow-500',
+            'bg-pink-500',
+            'bg-indigo-500',
+        ];
+        
+        // Handle case where userId might be undefined
+        if (!userId) return colors[0];
+        
+        // Simple hash function to generate a consistent color for each user
+        const hash = typeof userId === 'string' ? 
+            userId.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0) : 
+            0;
+            
+        return colors[hash % colors.length];
     };
 
     useEffect(() => {
         const fetchPostAndComments = async () => {
             try {
-                console.log(`Fetching post from ${BASE_URL}/api/posts/${postId}`);
-                // Make request without authentication headers for public access
+                // Fetch post data
                 const postResponse = await axios.get(`${BASE_URL}/api/posts/${postId}`);
-                console.log("Post fetched:", postResponse.data);
                 setPost(postResponse.data);
                 
                 // Set like status and counts
@@ -71,11 +129,55 @@ export default function PostPage() {
                 setShareCount(postResponse.data.shareCount || 0);
                 // Set share URL for this post
                 setShareUrl(window.location.href);
+                
+                // Enhanced author fetching with multiple fallbacks
+                if (postResponse.data.userId) {
+                    try {
+                        // First try with original userId format
+                        const authorResponse = await axios.get(`${BASE_URL}/api/user/${postResponse.data.userId}`);
+                        setAuthor(authorResponse.data);
+                    } catch (authorErr) {
+                        console.error('Error fetching author with ID, trying alternative format:', authorErr);
+                        
+                        // Try with alternative ID format (some APIs use _id instead of id)
+                        try {
+                            const authorAltId = postResponse.data.userId.includes('_id') ? 
+                                postResponse.data.userId : 
+                                postResponse.data._id || postResponse.data.id;
+                                
+                            const authorAltResponse = await axios.get(`${BASE_URL}/api/user/${authorAltId}`);
+                            setAuthor(authorAltResponse.data);
+                        } catch (altErr) {
+                            // If post has user data embedded, use that
+                            if (postResponse.data.user) {
+                                setAuthor(postResponse.data.user);
+                            } else if (postResponse.data.username) {
+                                // Last resort: check if username exists directly on the post
+                                setAuthor({
+                                    id: postResponse.data.userId,
+                                    username: postResponse.data.username,
+                                    profilePicture: null
+                                });
+                            } else if (postResponse.data.author) {
+                                // Check if there's an author field
+                                setAuthor(postResponse.data.author);
+                            }
+                        }
+                    }
+                } else if (postResponse.data.author) {
+                    // Some APIs embed author directly
+                    setAuthor(postResponse.data.author);
+                } else if (postResponse.data.username) {
+                    // If we have a username but no full author object
+                    setAuthor({
+                        id: postResponse.data._id || postResponse.data.id,
+                        username: postResponse.data.username,
+                        profilePicture: null
+                    });
+                }
 
-                console.log(`Fetching comments from ${BASE_URL}/api/comments/post/${postId}`);
-                // Make request without authentication headers for public access
+                // Fetch comments
                 const commentsResponse = await axios.get(`${BASE_URL}/api/comments/post/${postId}`);
-                console.log("Comments fetched:", commentsResponse.data);
                 setComments(commentsResponse.data);
                 setLoading(false);
             } catch (err) {
@@ -86,7 +188,7 @@ export default function PostPage() {
         };
 
         fetchPostAndComments();
-    }, [postId, currentUser, navigate]);
+    }, [postId, currentUser, BASE_URL]);
 
     const handleLike = async () => {
         if (!currentUser) {
@@ -95,7 +197,6 @@ export default function PostPage() {
         }
         
         try {
-            console.log("Sending like request with token:", currentUser.token);
             const response = await axios.post(
                 `${BASE_URL}/api/posts/${postId}/like`,
                 {}, // Empty body
@@ -108,7 +209,6 @@ export default function PostPage() {
             );
             
             const updatedPost = response.data;
-            console.log("Like response:", updatedPost);
             setPost(updatedPost);
             
             // Update like states
@@ -118,7 +218,6 @@ export default function PostPage() {
             }
         } catch (error) {
             console.error('Error toggling like:', error);
-            console.error('Error response:', error.response?.data);
             setError('Failed to update like. Please try again.');
         }
     };
@@ -169,7 +268,6 @@ export default function PostPage() {
         }
 
         try {
-            console.log(`Posting comment to ${BASE_URL}/api/comments/post/${postId}`);
             const response = await axios.post(
                 `${BASE_URL}/api/comments/post/${postId}`,
                 { content: newComment },
@@ -179,7 +277,6 @@ export default function PostPage() {
                     },
                 }
             );
-            console.log("Comment posted:", response.data);
             setComments([...comments, response.data]);
             setNewComment('');
             setError(null);
@@ -201,7 +298,6 @@ export default function PostPage() {
         }
 
         try {
-            console.log(`Updating comment ${commentId} at ${BASE_URL}/api/comments/${commentId}`);
             const response = await axios.put(
                 `${BASE_URL}/api/comments/${commentId}`,
                 { content: editedContent },
@@ -211,7 +307,6 @@ export default function PostPage() {
                     },
                 }
             );
-            console.log("Comment updated:", response.data);
             setComments(
                 comments.map((comment) =>
                     comment.id === commentId ? response.data : comment
@@ -235,13 +330,11 @@ export default function PostPage() {
         if (!window.confirm('Are you sure you want to delete this comment?')) return;
 
         try {
-            console.log(`Deleting comment ${commentId} at ${BASE_URL}/api/comments/${commentId}`);
             await axios.delete(`${BASE_URL}/api/comments/${commentId}`, {
                 headers: {
                     Authorization: `Bearer ${currentUser.token}`,
                 },
             });
-            console.log("Comment deleted:", commentId);
             setComments(comments.filter((comment) => comment.id !== commentId));
             setError(null);
         } catch (err) {
@@ -255,10 +348,8 @@ export default function PostPage() {
         setLoading(true);
         const fetchPostAndComments = async () => {
             try {
-                console.log(`Retrying fetch post from ${BASE_URL}/api/posts/${postId}`);
-                // Make request without authentication headers for public access
+                // Fetch post data
                 const postResponse = await axios.get(`${BASE_URL}/api/posts/${postId}`);
-                console.log("Post fetched on retry:", postResponse.data);
                 setPost(postResponse.data);
                 
                 // Update like and share counts
@@ -267,11 +358,55 @@ export default function PostPage() {
                     setIsLiked(currentUser && postResponse.data.likedBy.includes(currentUser.id));
                 }
                 setShareCount(postResponse.data.shareCount || 0);
+                
+                // Enhanced author fetching with multiple fallbacks
+                if (postResponse.data.userId) {
+                    try {
+                        // First try with original userId format
+                        const authorResponse = await axios.get(`${BASE_URL}/api/user/${postResponse.data.userId}`);
+                        setAuthor(authorResponse.data);
+                    } catch (authorErr) {
+                        console.error('Error fetching author with ID, trying alternative format:', authorErr);
+                        
+                        // Try with alternative ID format (some APIs use _id instead of id)
+                        try {
+                            const authorAltId = postResponse.data.userId.includes('_id') ? 
+                                postResponse.data.userId : 
+                                postResponse.data._id || postResponse.data.id;
+                                
+                            const authorAltResponse = await axios.get(`${BASE_URL}/api/user/${authorAltId}`);
+                            setAuthor(authorAltResponse.data);
+                        } catch (altErr) {
+                            // If post has user data embedded, use that
+                            if (postResponse.data.user) {
+                                setAuthor(postResponse.data.user);
+                            } else if (postResponse.data.username) {
+                                // Last resort: check if username exists directly on the post
+                                setAuthor({
+                                    id: postResponse.data.userId,
+                                    username: postResponse.data.username,
+                                    profilePicture: null
+                                });
+                            } else if (postResponse.data.author) {
+                                // Check if there's an author field
+                                setAuthor(postResponse.data.author);
+                            }
+                        }
+                    }
+                } else if (postResponse.data.author) {
+                    // Some APIs embed author directly
+                    setAuthor(postResponse.data.author);
+                } else if (postResponse.data.username) {
+                    // If we have a username but no full author object
+                    setAuthor({
+                        id: postResponse.data._id || postResponse.data.id,
+                        username: postResponse.data.username,
+                        profilePicture: null
+                    });
+                }
 
-                console.log(`Retrying fetch comments from ${BASE_URL}/api/comments/post/${postId}`);
-                // Make request without authentication headers for public access
+                // Fetch comments
                 const commentsResponse = await axios.get(`${BASE_URL}/api/comments/post/${postId}`);
-                console.log("Comments fetched on retry:", commentsResponse.data);
                 setComments(commentsResponse.data);
                 setLoading(false);
             } catch (err) {
@@ -306,6 +441,7 @@ export default function PostPage() {
         <div className="bg-gradient-to-b from-gray-900 to-gray-800 text-white min-h-screen py-12">
             <div className="container mx-auto px-4">
                 <div className="bg-gray-800 rounded-xl shadow-lg p-6 mb-8">
+                    {/* Post Image */}
                     {post?.postImg && post.postImg !== 'default.png' ? (
                         <div className="relative">
                             <img
@@ -313,7 +449,6 @@ export default function PostPage() {
                                 src={getImageUrl(post.postImg)}
                                 alt={post.postName}
                                 onError={(e) => {
-                                    console.error("Image failed to load:", post.postImg);
                                     e.target.src = postLogo;
                                 }}
                             />
@@ -341,6 +476,63 @@ export default function PostPage() {
                             </Badge>
                         </div>
                     )}
+                    
+                    {/* Author Information */}
+                    <div className="mt-6 flex items-center">
+                        {author ? (
+                            <Link 
+                                to={`/profile/${author.id || author._id}`} 
+                                className="flex items-center hover:bg-gray-700 p-2 rounded-lg transition-colors"
+                            >
+                                {author.profilePicture ? (
+                                    <img 
+                                        src={author.profilePicture} 
+                                        alt={author.username} 
+                                        className="h-10 w-10 rounded-full object-cover border-2 border-blue-500"
+                                    />
+                                ) : (
+                                    <div className={`flex items-center justify-center h-10 w-10 rounded-full text-white font-medium ${getRandomColorClass(author.id || author._id || 'default')}`}>
+                                        {getInitial(author.username)}
+                                    </div>
+                                )}
+                                <div className="ml-3">
+                                    <p className="font-medium text-white">{author.username}</p>
+                                    <div className="flex items-center text-gray-400 text-xs">
+                                        <HiOutlineClock className="mr-1" /> 
+                                        {formatTimeAgo(post.createdAt)}
+                                        {author.isAdmin && (
+                                            <Badge color="indigo" className="ml-2 px-2 py-0.5 text-xs">
+                                                Admin
+                                            </Badge>
+                                        )}
+                                    </div>
+                                </div>
+                            </Link>
+                        ) : (
+                            <div className="flex items-center">
+                                <div className={`flex items-center justify-center h-10 w-10 rounded-full bg-gray-600 text-white`}>
+                                    <HiUser className="text-gray-300 h-5 w-5" />
+                                </div>
+                                <div className="ml-3">
+                                    <p className="font-medium text-white">{post.username || "Anonymous User"}</p>
+                                    <p className="text-gray-400 text-xs">{formatTimeAgo(post.createdAt)}</p>
+                                </div>
+                            </div>
+                        )}
+                        
+                        {/* Edit button for post author */}
+                        {currentUser && post.userId === currentUser.id && (
+                            <Button
+                                color="light"
+                                size="xs"
+                                className="ml-auto"
+                                onClick={() => navigate(`/edit-post/${postId}`)}
+                            >
+                                <HiOutlinePencil className="mr-1" /> Edit Post
+                            </Button>
+                        )}
+                    </div>
+                    
                     <div className="p-4">
                         <h1 className="text-4xl font-extrabold text-white mb-3">{post.postName}</h1>
                         <Badge
@@ -442,11 +634,16 @@ export default function PostPage() {
                                     className="border-b border-gray-700 pb-4 last:border-b-0"
                                 >
                                     <div className="flex justify-between items-start mb-2">
-                                        <div>
-                                            <p className="font-semibold text-white text-lg">{comment.username}</p>
-                                            <p className="text-gray-400 text-sm">
-                                                {formatDate(comment.createdAt)}
-                                            </p>
+                                        <div className="flex items-center">
+                                            <div className={`flex items-center justify-center h-8 w-8 rounded-full text-white font-medium mr-2 ${getRandomColorClass(comment.userId)}`}>
+                                                {getInitial(comment.username)}
+                                            </div>
+                                            <div>
+                                                <p className="font-semibold text-white text-lg">{comment.username}</p>
+                                                <p className="text-gray-400 text-sm">
+                                                    {formatDate(comment.createdAt)}
+                                                </p>
+                                            </div>
                                         </div>
                                         {currentUser && comment.userId === currentUser.id && (
                                             <div className="flex space-x-3">
@@ -505,7 +702,7 @@ export default function PostPage() {
                                             </div>
                                         </div>
                                     ) : (
-                                        <p className="text-gray-300 text-base">{comment.content}</p>
+                                        <p className="text-gray-300 text-base pl-10">{comment.content}</p>
                                     )}
                                 </div>
                             ))}

@@ -12,7 +12,6 @@ import {
 import { Button, TextInput, Alert, Card, Badge, Modal, ModalFooter, ModalHeader, ModalBody, Spinner } from 'flowbite-react';
 import { useNavigate } from 'react-router-dom';
 import { HiOutlineMail, HiOutlineUser, HiOutlineLockClosed, HiCheck } from 'react-icons/hi';
-import DashSidebar from '../components/DashSidebar';
 
 export default function Profile() {
   const { currentUser, loading, error } = useSelector((state) => state.user);
@@ -143,7 +142,6 @@ export default function Profile() {
   return (
     <div className="flex min-h-screen bg-gray-50">
       <div className="w-64">
-        <DashSidebar />
       </div>
       <div className="flex-1 p-6">
         <h1 className="text-3xl font-bold text-gray-900 mb-6">My Profile</h1>
